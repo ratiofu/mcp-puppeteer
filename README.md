@@ -2,6 +2,12 @@
 
 ## Usage
 
+Note that this is using `puppeteer-core` and does not install additional browsers. The expectation here is that you know how to start Chrome with the remote debugging port enabled. On the Mac, for example, this may look something like this:
+
+```sh
+open -a "Google Chrome" --args --remote-debugging-port=9222
+```
+
 1. Install dependencies
 
 ```sh
