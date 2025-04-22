@@ -1,7 +1,0 @@
-{
-  "mcpServers": {
-    "puppeteer-control": {
-      "url": "http://localhost:7742/sse"
-    }
-  }
-}
