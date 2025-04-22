@@ -14,7 +14,7 @@
 % pnpm run start
 ```
 
-3. Go to Cursor > Settings > Cursor Settings > MCP > Add new global MCP server and add the following configuration:
+3. Go to **Cursor** → Settings → Cursor Settings → MCP → Add new global MCP server and add the following configuration:
 
 ```json
 {
