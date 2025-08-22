@@ -3,6 +3,7 @@
 ## Root Directory
 ```
 ├── src/                    # Source code
+├── dist/                   # Compiled JavaScript and type definitions
 ├── .kiro/                  # Kiro IDE configuration
 ├── .vscode/                # VS Code settings
 ├── .git/                   # Git repository
@@ -23,6 +24,18 @@
 - **`puppeteer.ts`** - Browser initialization and connection logic
 - **`cli.ts`** - Command-line utilities (if needed)
 
+## Build Output (`dist/`)
+- **`index.js`** - Single bundled and minified JavaScript file (ESM, Node.js 22+)
+- Generated via `pnpm run build` (uses `esbuild.config.js`)
+- **Not committed to git** - Added to `.gitignore` (NPM publishing best practice)
+- **Built automatically** - `prepublishOnly` script ensures fresh build before publishing
+
+## Build Configuration (`esbuild.config.js`)
+- **Entry point**: `src/server.ts`
+- **Bundle settings**: Platform node, target node22, ESM format
+- **Minification**: Enabled for production builds
+- **External dependencies**: All runtime dependencies excluded from bundle
+
 ## Code Organization Patterns
 
 ### File Naming
@@ -33,7 +46,7 @@
 ### Module Structure
 - Each file should have a single primary export
 - Use named exports for utilities and types
-- Import with explicit `.ts` extensions for local modules
+- Import with explicit `.js` extensions for local modules (required for compiled output)
 - Use `.js` extensions when importing from `@modelcontextprotocol/sdk`
 
 ### Class Organization

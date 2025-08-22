@@ -6,10 +6,17 @@
     "type": "git",
     "url": "https://github.com/ratiofu/mcp-puppeteer"
   },
-  "main": "src/server.ts",
+  "main": "dist/index.js",
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "start": "ts-node src/server.ts"
+    "build": "pnpm run typecheck && rm -rf dist && node esbuild.config.js",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/index.js",
+    "dev": "pnpm run build && pnpm run start",
+    "prepublishOnly": "pnpm run build"
   },
   "keywords": [
     "mcp",
@@ -19,15 +26,20 @@
   "author": "@ratiofu",
   "license": "MIT",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.17.3",
     "express": "5.1.0",
     "puppeteer-core": "24.17.0",
-    "ts-node": "10.9.2",
-    "typescript": "5.9.2",
     "zod": "4.0.17"
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "1.17.3",
     "@types/express": "5.0.3",
-    "@types/node": "24.3.0"
+    "@types/node": "24.3.0",
+    "esbuild": "0.25.9",
+    "typescript": "5.9.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

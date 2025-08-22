@@ -1,15 +1,15 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import puppeteer from "puppeteer-core";
+import puppeteer, { type Browser, type Page } from "puppeteer-core";
 import { z } from "zod";
 
 export class PuppeteerMcpServer extends McpServer {
 
-  private page: puppeteer.Page | null = null;
-  private readonly browser: puppeteer.Browser;
+  private page: Page | null = null;
+  private readonly browser: Browser;
   private readonly sessionId: string;
   private consoleLogs: string[] = [];
 
-  constructor(sessionId: string, browser: puppeteer.Browser) {
+  constructor(sessionId: string, browser: Browser) {
     super({
       name: 'puppeteer-mcp',
       version: '1.0.0',

@@ -16,10 +16,17 @@ open -a "Google Chrome" --args --remote-debugging-port=9222
 % pnpm i
 ```
 
-2. Run the MCP Server
+2. Build and run the MCP Server
 
 ```sh
+% pnpm run build
 % pnpm run start
+```
+
+Or for development with auto-rebuild:
+
+```sh
+% pnpm run dev
 ```
 
 3. Go to **Cursor** → Settings → Cursor Settings → MCP → Add new global MCP server and add the following configuration:

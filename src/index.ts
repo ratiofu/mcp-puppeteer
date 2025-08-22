@@ -1,13 +1,13 @@
-import puppeteer from 'puppeteer-core';
+import puppeteer, { type Browser } from 'puppeteer-core';
 import express from "express";
-import { initBrowser } from './puppeteer.ts';
-import { PuppeteerMcpServer } from './PuppeteerMcpServer.ts';
+import { initBrowser } from './puppeteer.js';
+import { PuppeteerMcpServer } from './PuppeteerMcpServer.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import http from 'http';
 
 const port = 7742;
 
-function setupRoutes(app: express.Express, browser: puppeteer.Browser) {
+function setupRoutes(app: express.Express, browser: Browser) {
 
   const sessions = new Map<string, { transport: SSEServerTransport, server: PuppeteerMcpServer }>();
 

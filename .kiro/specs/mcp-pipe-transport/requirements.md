@@ -38,13 +38,14 @@ Convert the Puppeteer MCP Server from using Server-Sent Events (SSE) over HTTP t
 
 ### Requirement 4
 
-**User Story:** As a developer, I want a proper build system that compiles TypeScript to JavaScript for production use.
+**User Story:** As a developer, I want a modern build system that bundles and optimizes TypeScript for production use.
 
 #### Acceptance Criteria
 
-1. WHEN building THEN it SHALL compile TypeScript to `dist/` folder
-2. WHEN running THEN it SHALL execute from compiled JavaScript, not TypeScript directly
-3. WHEN testing THEN it SHALL use MCP Inspector with the compiled server
+1. WHEN building THEN it SHALL bundle all source files into a single `dist/index.js` file
+2. WHEN building THEN it SHALL perform type checking before bundling
+3. WHEN running THEN it SHALL execute from the bundled JavaScript, not TypeScript directly
+4. WHEN testing THEN it SHALL use MCP Inspector with the compiled server
 
 ### Requirement 5
 

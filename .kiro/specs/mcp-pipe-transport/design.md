@@ -92,55 +92,62 @@ server.connect(transport);
 
 ## Build System
 
-### TypeScript Compilation
-- **Output Directory**: `dist/` folder for compiled JavaScript
-- **Build Script**: `pnpm run build` compiles TypeScript to JavaScript
-- **Entry Point**: `dist/server.js` as the main executable
-- **Source Maps**: Include source maps for debugging
+### esbuild Bundling
+- **Output Directory**: `dist/` folder for bundled JavaScript
+- **Build Script**: `pnpm run build` performs type checking then bundles with esbuild
+- **Entry Point**: `dist/index.js` as the single bundled executable
+- **Minification**: Enabled for production optimization
+- **External Dependencies**: All runtime dependencies remain external (not bundled)
 
 ### Package Scripts
 ```json
 {
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
-    "start": "node dist/server.js",
-    "dev": "concurrently \"tsc --watch\" \"nodemon --watch dist --exec 'node dist/server.js && pnpm run restart-inspector' dist/server.js\"",
-    "inspector": "npx @modelcontextprotocol/inspector node dist/server.js",
-    "restart-inspector": "pkill -f '@modelcontextprotocol/inspector' || true && sleep 1 && pnpm run inspector &"
+    "build": "pnpm run typecheck && rm -rf dist && node esbuild.config.js",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/index.js",
+    "dev": "concurrently \"esbuild --watch\" \"nodemon --watch dist --exec 'node dist/index.js && pnpm run restart-inspector' dist/index.js\"",
+    "inspector": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "restart-inspector": "pkill -f '@modelcontextprotocol/inspector' || true && sleep 1 && pnpm run inspector &",
+    "prepublishOnly": "pnpm run build"
   }
 }
 ```
 
 ### Development Dependencies
+- **Add**: `esbuild` for fast JavaScript bundling
 - **Add**: `nodemon` for auto-restart on file changes
 - **Add**: `concurrently` for running multiple commands simultaneously
-- **Remove**: `ts-node` (replaced with build + watch workflow)
+- **Remove**: `ts-node` (replaced with esbuild workflow)
 - **Remove**: `express`, `@types/express` (HTTP layer removed)
 - **Move**: `@modelcontextprotocol/sdk` from devDependencies to dependencies
+- **Keep**: `typescript` for type checking only (no compilation)
 
 ### Development Workflow
-- **File Watching**: `tsc --watch` monitors TypeScript files for changes
-- **Auto-restart**: `nodemon` restarts server when compiled files change
+- **File Watching**: `esbuild --watch` monitors TypeScript files for changes and rebuilds
+- **Auto-restart**: `nodemon` restarts server when bundled files change
 - **Inspector Auto-restart**: `restart-inspector` script kills existing inspector and starts new one
-- **Concurrent Development**: `pnpm run dev` runs TypeScript compiler, server, and inspector with full auto-restart
+- **Concurrent Development**: `pnpm run dev` runs esbuild watcher, server, and inspector with full auto-restart
+- **Production**: `pnpm run build` creates minified bundle for deployment
 
-### TypeScript Configuration
-- **Target**: ES2022 for Node.js compatibility
-- **Module**: ESNext with Node resolution
-- **Output**: Emit to `dist/` directory
-- **Source Maps**: Enable for debugging
+### Build Configuration
+- **esbuild Target**: Node.js 22+ for modern performance
+- **TypeScript Config**: Type checking only with `noEmit: true`
+- **Bundle Format**: ESM modules for Node.js
+- **Minification**: Enabled for production builds
+- **External Dependencies**: All runtime deps excluded from bundle
 
 ## Testing Strategy
 
 ### Automated Testing Process
-1. **Build**: `pnpm run build` compiles TypeScript to JavaScript
-2. **Inspector Testing**: `pnpm run inspector` launches MCP Inspector with compiled server
-3. **Tool Validation**: Test all MCP tools through Inspector interface
-4. **Integration Testing**: Verify browser automation works end-to-end
+1. **Type Check**: `pnpm run typecheck` validates TypeScript types
+2. **Build**: `pnpm run build` bundles application with esbuild
+3. **Inspector Testing**: `npx @modelcontextprotocol/inspector node dist/index.js`
+4. **Tool Validation**: Test all MCP tools through Inspector interface
+5. **Integration Testing**: Verify browser automation works end-to-end
 
 ### Development Testing Process
-1. **Full Auto-restart Development**: Use `pnpm run dev` for auto-recompile, server restart, and inspector restart
+1. **Full Auto-restart Development**: Use `pnpm run dev` for auto-rebuild, server restart, and inspector restart
 2. **Manual Testing**: Use `pnpm run inspector` for one-time testing
 3. **Inspector Restart**: Use `pnpm run restart-inspector` to manually restart inspector
 4. **Production Testing**: Use `pnpm run build && pnpm start` for final testing
@@ -161,15 +168,18 @@ server.connect(transport);
 
 ### Content Changes
 - **Setup Instructions**: Replace `pnpm start` with `pnpm run build && pnpm start`
-- **Testing Instructions**: Update to use `pnpm run test` with MCP Inspector
+- **Testing Instructions**: Update to use `npx @modelcontextprotocol/inspector node dist/index.js`
 - **Architecture Description**: Remove Express server and HTTP transport references
+- **Build System**: Document esbuild-based bundling and type checking workflow
 - **Usage Examples**: Show pipe transport instead of HTTP endpoints
 
 ### Validation Criteria
-- TypeScript compiles without errors to `dist/` folder
-- `node dist/server.js` starts successfully and accepts MCP messages
+- TypeScript type checking passes without errors
+- esbuild bundles successfully to `dist/index.js`
+- `node dist/index.js` starts successfully and accepts MCP messages
 - All existing MCP tools function identically via Inspector
 - No HTTP ports are opened during operation
 - Process exits cleanly on disconnect
+- Bundle size is optimized and minified
 - Memory usage is lower than HTTP version
 - Documentation accurately reflects new architecture and commands

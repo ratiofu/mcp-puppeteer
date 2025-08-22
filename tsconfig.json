@@ -1,16 +1,19 @@
 {
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
-    "target": "ESNext",
+    "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist",
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
     "noEmit": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 }

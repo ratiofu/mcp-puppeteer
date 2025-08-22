@@ -1,7 +1,5 @@
-import puppeteer from 'puppeteer-core';
-import { initBrowser } from './puppeteer.ts';
-import { PuppeteerMcpServer } from './PuppeteerMcpServer.ts';
-import readline from 'readline';
+import { initBrowser } from './puppeteer.js';
+import { PuppeteerMcpServer } from './PuppeteerMcpServer.js';
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 const sessionId = "cli";

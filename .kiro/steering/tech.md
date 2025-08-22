@@ -16,14 +16,18 @@
 - Uses `pnpm-lock.yaml` for dependency locking
 
 ## Prerequisites
-- Node.js (compatible with ESNext modules)
+- Node.js 22+ (use `nvm use` to switch to project version)
 - pnpm package manager
 - Chrome browser with remote debugging enabled
 
 ## Build System
-- No build step required - uses ts-node for direct execution
-- TypeScript configuration targets ESNext with NodeNext modules
-- `noEmit: true` - runtime only, no compilation output
+- **Type Checking**: TypeScript compiler validates types without emitting files
+- **Development**: Build and run compiled JavaScript (no ts-node)
+- **Production**: Uses esbuild for fast JavaScript bundling
+- **Output**: Single bundled `dist/index.js` file
+- **Target**: Node.js 22+ with ESM modules
+- **Externals**: Dependencies like puppeteer-core, express, MCP SDK remain external
+- **No type declarations**: Runtime-only package, no TypeScript definitions generated
 
 ## Common Commands
 
@@ -35,11 +39,27 @@ pnpm install
 
 ### Development
 ```bash
-# Start the MCP server
+# Type check TypeScript code
+pnpm run typecheck
+
+# Build and start the MCP server (includes type checking)
+pnpm run build
 pnpm run start
+
+# Or build and start in one command (development)
+pnpm run dev
 
 # Start Chrome with remote debugging (required)
 open -a "Google Chrome" --args --remote-debugging-port=9222
+```
+
+### NPM Publishing
+```bash
+# Publish to NPM (automatically builds via prepublishOnly)
+npm publish
+
+# Test package locally
+npm pack
 ```
 
 ### Testing
@@ -57,11 +77,14 @@ pnpx @modelcontextprotocol/inspector
 
 ## Code Style Guidelines
 
-### TypeScript Configuration
-- Target: ESNext with NodeNext modules
-- Strict mode enabled
-- Import TypeScript extensions allowed
-- No emit (runtime via ts-node)
+### Build Configuration
+- **esbuild**: Bundles and minifies JavaScript targeting Node.js 22+ with ESM
+- **Configuration**: `esbuild.config.js` contains all build settings
+- **Externals**: All dependencies remain external (not bundled)
+- **Output**: Single minified `index.js` in dist folder
+- **Minification**: Enabled for smaller bundle size
+- **No source maps**: Optimized for NPM publishing
+- **No type declarations**: Runtime-only server package
 
 ### Formatting Standards
 - **Indentation**: 2 spaces (enforced by .editorconfig)
@@ -82,7 +105,7 @@ pnpx @modelcontextprotocol/inspector
 
 ### Manual Testing Process
 1. Start Chrome with remote debugging: `--remote-debugging-port=9222`
-2. Run the server: `pnpm run start`
+2. Build and run the server: `pnpm run dev` (or `pnpm run build && pnpm run start`)
 3. Use MCP Inspector to test tools: `pnpx @modelcontextprotocol/inspector`
 4. Connect to: `http://localhost:7742/sse`
 
