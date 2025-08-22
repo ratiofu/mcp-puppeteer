@@ -122,6 +122,37 @@ pnpx @modelcontextprotocol/inspector
 - Extract HTML from dynamic content
 - Monitor console output during interactions
 
+## Cross-Platform Considerations
+
+### Process Management and Timeouts
+- **macOS**: Use background processes with `sleep` and `kill` for timeouts (avoid `timeout` command)
+- **Linux**: Can use `timeout` command if available, fallback to background process approach
+- **Cross-platform scripts**: Always check for command availability or use portable alternatives
+
+### Portable Timeout Pattern
+```bash
+# Instead of timeout command, use this pattern:
+command_to_run &
+PID=$!
+sleep 5
+kill $PID 2>/dev/null || true
+wait $PID 2>/dev/null || true
+```
+
+### Command Availability Checks
+```bash
+# Check if command exists before using
+if command -v timeout >/dev/null 2>&1; then
+    timeout 5s your_command
+else
+    # Fallback approach
+    your_command &
+    PID=$!
+    sleep 5
+    kill $PID 2>/dev/null || true
+fi
+```
+
 ## Debugging
 - Console logs include session IDs for tracing
 - Browser console output captured and retrievable

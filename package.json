@@ -1,5 +1,5 @@
 {
-  "name": "puppeteer-mcp",
+  "name": "@ratiofu/mcp-puppeteer",
   "version": "1.0.0",
   "description": "MCP server for controlling Chrome via Puppeteer",
   "repository": {
@@ -8,14 +8,26 @@
   },
   "main": "dist/index.js",
   "type": "module",
+  "bin": {
+    "mcp-puppeteer": "./bin/mcp-puppeteer"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "files": [
-    "dist"
+    "dist/",
+    "bin/",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "pnpm run typecheck && rm -rf dist && node esbuild.config.js",
     "typecheck": "tsc --noEmit",
     "start": "node dist/index.js",
     "test": "./test/test-server.sh",
+    "test:npx": "./test/test-npx.sh",
+    "local:publish": "./scripts/local-publish.sh",
+    "local:cleanup": "./scripts/local-cleanup.sh",
     "dev": "concurrently \"node esbuild.config.js --watch\" \"nodemon --watch dist --exec 'node dist/index.js' dist/index.js\"",
     "dev:inspector": "concurrently \"node esbuild.config.js --watch\" \"nodemon --watch dist --delay 2 --exec 'pnpm run restart-inspector' dist/index.js\"",
     "inspector": "npx @modelcontextprotocol/inspector node dist/index.js",
@@ -25,7 +37,9 @@
   "keywords": [
     "mcp",
     "puppeteer",
-    "chrome"
+    "chrome",
+    "browser",
+    "automation"
   ],
   "author": "@ratiofu",
   "license": "MIT",

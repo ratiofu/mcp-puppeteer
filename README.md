@@ -1,8 +1,27 @@
-# A simple MCP Server for controlling Chrome via Puppeteer
+# Puppeteer MCP Server
 
 ✨ **The key difference of this implementation to other MCP Puppeteer implementations is that it enables access to the raw DOM content of the page and the console!**
 
-This MCP server uses pipe transport (stdin/stdout) to communicate with MCP clients, following standard MCP protocol patterns without requiring HTTP ports or server management.
+A Model Context Protocol (MCP) server that provides browser automation capabilities through Puppeteer. This server enables AI assistants to control Chrome browsers, take screenshots, extract content, and interact with web pages.
+
+## MCP Client Configuration
+
+Add this to your MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "puppeteer": {
+      "command": "npx",
+      "args": ["@ratiofu/mcp-puppeteer"]
+    }
+  }
+}
+```
+
+**Notes:**
+- Some MCP clients support additional server configuration options. Consult your MCP client's documentation for advanced configuration settings.
+- If you're using other Puppeteer-based MCP servers, consider using a unique name like `"puppeteer-ratiofu"` to avoid conflicts. Only run one Puppeteer MCP server at a time, and update any local agent guidance accordingly if you change the server name.
 
 ## Available Tools
 
@@ -15,115 +34,82 @@ This MCP server uses pipe transport (stdin/stdout) to communicate with MCP clien
 
 ## Prerequisites
 
-This server uses `puppeteer-core` and does not install additional browsers. You need Chrome with remote debugging enabled:
+You need Chrome (or Chromium) running with remote debugging enabled:
 
-```sh
+### macOS
+```bash
 open -a "Google Chrome" --args --remote-debugging-port=9222
 ```
 
-## Setup
+### Linux
+```bash
+google-chrome --remote-debugging-port=9222
+```
 
-1. Install dependencies
+### Windows
+```cmd
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
+```
 
-```sh
+## How It Works
+
+The server automatically downloads and runs via `npx` when your MCP client needs it. No manual installation required! It uses Chrome's remote debugging protocol to control your browser.
+
+## Troubleshooting
+
+### Chrome Connection Issues
+
+**Error: "Could not connect to Chrome"**
+
+Make sure Chrome is running with the debug port:
+
+```bash
+# macOS
+open -a "Google Chrome" --args --remote-debugging-port=9222
+
+# Linux  
+google-chrome --remote-debugging-port=9222
+
+# Windows
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
+```
+
+You can verify Chrome is ready by opening http://localhost:9222/json in your browser.
+
+### MCP Client Issues
+
+**Server not responding:**
+1. Ensure Chrome is running with debug port (see above)
+2. Check your MCP client configuration matches the examples
+3. Verify Node.js 22+ is installed (`node --version`)
+
+**Need to test manually?**
+```bash
+echo '{}' | npx @ratiofu/mcp-puppeteer
+```
+
+## Development
+
+For local development:
+
+```bash
+git clone https://github.com/ratiofu/mcp-puppeteer
+cd mcp-puppeteer
 pnpm install
-```
-
-2. Build the server
-
-```sh
 pnpm run build
-```
-
-3. Run the server
-
-```sh
 pnpm start
 ```
 
-## Development Workflow
+### Development Scripts
 
-For development with auto-rebuild and restart:
-
-```sh
-pnpm run dev
-```
-
-This watches TypeScript files, automatically rebuilds with esbuild, and restarts the server when files change.
-
-For development with MCP Inspector auto-restart:
-
-```sh
-pnpm run dev:inspector
-```
-
-This does the same as `dev` but also automatically restarts MCP Inspector for seamless testing.
-
-### Available Scripts
-
-```sh
-# Type check only
-pnpm run typecheck
-
-# Run automated tests
-pnpm run test
-
-# Start MCP Inspector for testing
-pnpm run inspector
-
-# Restart MCP Inspector (kills existing and starts new)
-pnpm run restart-inspector
-```
-
-## Testing
-
-### Automated Testing
-Run the test suite to validate MCP protocol functionality:
-
-```sh
-pnpm run test
-```
-
-### Interactive Testing with MCP Inspector
-Test the server interactively using MCP Inspector:
-
-```sh
-pnpm run inspector
-```
-
-### MCP Client Configuration
-
-For MCP clients like Cursor, configure the server using pipe transport:
-
-```json
-{
-  "mcpServers": {
-    "puppeteer-control": {
-      "command": "node",
-      "args": ["path/to/dist/index.js"]
-    }
-  }
-}
-```
-
-Or if installed globally via npm:
-
-```json
-{
-  "mcpServers": {
-    "puppeteer-control": {
-      "command": "npx",
-      "args": ["puppeteer-mcp-server"]
-    }
-  }
-}
+```bash
+pnpm run dev            # Auto-rebuild and restart
+pnpm run test           # Run tests
+pnpm run inspector      # Test with MCP Inspector
 ```
 
 ## Architecture
 
-This server uses:
 - **Pipe Transport**: Direct stdin/stdout communication with MCP clients
-- **Single Session**: One browser session per server process
-- **esbuild Bundling**: Fast TypeScript compilation and bundling
-- **Puppeteer Core**: Browser automation without bundled browsers
+- **Puppeteer Core**: Browser automation without bundled browsers  
 - **Automatic Cleanup**: Browser resources cleaned up on process exit
