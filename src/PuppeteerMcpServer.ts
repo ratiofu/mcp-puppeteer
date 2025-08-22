@@ -21,7 +21,7 @@ export class PuppeteerMcpServer extends McpServer {
     this.tool(
       "navigate",
       "Navigate to a specific URL",
-      { url: z.string().url().describe("URL to navigate to") },
+      { url: z.url().describe("URL to navigate to") },
       async ({ url }) => {
         if (!this.page) {
           this.page = await this.browser.newPage();

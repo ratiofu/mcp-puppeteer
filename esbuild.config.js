@@ -1,17 +1,27 @@
-import { build } from 'esbuild';
+import { build, context } from 'esbuild';
 
-await build({
+const isWatch = process.argv.includes('--watch');
+
+const config = {
     entryPoints: ['src/index.ts'],
     bundle: true,
     platform: 'node',
     target: 'node22',
     format: 'esm',
     outfile: 'dist/index.js',
-    minify: true,
     external: [
         'puppeteer-core',
         '@modelcontextprotocol/sdk',
         'zod'
     ],
-    logLevel: 'info'
-});
+    logLevel: 'info',
+    minify: !isWatch // Don't minify in watch mode for faster builds
+};
+
+if (isWatch) {
+    const ctx = await context(config);
+    await ctx.watch();
+    console.log('Watching for changes...');
+} else {
+    await build(config);
+}

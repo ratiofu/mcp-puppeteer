@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "start": "node dist/index.js",
     "test": "./test/test-server.sh",
-    "dev": "concurrently \"esbuild --watch\" \"nodemon --watch dist --exec 'node dist/index.js && pnpm run restart-inspector' dist/index.js\"",
+    "dev": "concurrently \"node esbuild.config.js --watch\" \"nodemon --watch dist --exec 'node dist/index.js' dist/index.js\"",
+    "dev:inspector": "concurrently \"node esbuild.config.js --watch\" \"nodemon --watch dist --delay 2 --exec 'pnpm run restart-inspector' dist/index.js\"",
     "inspector": "npx @modelcontextprotocol/inspector node dist/index.js",
     "restart-inspector": "pkill -f '@modelcontextprotocol/inspector' || true && sleep 1 && pnpm run inspector &",
     "prepublishOnly": "pnpm run build"
