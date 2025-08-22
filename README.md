@@ -1,6 +1,6 @@
 # A simple MCP Server for controlling Chrome via Puppeteer
 
-✨ **The key difference of this implementation to other MCP Puppeteer implementations is that it enables access to the raw DOM content of the page**
+✨ **The key difference of this implementation to other MCP Puppeteer implementations is that it enables access to the raw DOM content of the page and the console!**
 
 ## Usage
 

@@ -19,10 +19,9 @@
 ```
 
 ## Source Code Organization (`src/`)
-- **`server.ts`** - Main entry point, Express server setup, session management
+- **`index.ts`** - Main entry point, pipe transport server setup, session management
 - **`PuppeteerMcpServer.ts`** - Core MCP server implementation with browser tools
 - **`puppeteer.ts`** - Browser initialization and connection logic
-- **`cli.ts`** - Command-line utilities (if needed)
 
 ## Build Output (`dist/`)
 - **`index.js`** - Single bundled and minified JavaScript file (ESM, Node.js 22+)
@@ -31,7 +30,7 @@
 - **Built automatically** - `prepublishOnly` script ensures fresh build before publishing
 
 ## Build Configuration (`esbuild.config.js`)
-- **Entry point**: `src/server.ts`
+- **Entry point**: `src/index.ts`
 - **Bundle settings**: Platform node, target node22, ESM format
 - **Minification**: Enabled for production builds
 - **External dependencies**: All runtime dependencies excluded from bundle
@@ -40,7 +39,7 @@
 
 ### File Naming
 - Use PascalCase for class files (`PuppeteerMcpServer.ts`)
-- Use camelCase for utility files (`puppeteer.ts`, `server.ts`)
+- Use camelCase for utility files (`puppeteer.ts`, `index.ts`)
 - Include `.ts` extensions in imports (required for ESNext modules)
 
 ### Module Structure
@@ -66,8 +65,8 @@
 ## Extension Points
 - Add new MCP tools in `PuppeteerMcpServer.ts`
 - Modify browser initialization in `src/puppeteer.ts`
-- Extend transport options in `src/server.ts`
-- Add CLI commands in `src/cli.ts`
+- Extend transport options in `src/index.ts`
+- Add additional functionality in `src/index.ts`
 
 ## Operational Security Recommendations
 - Run in isolated environments for production use

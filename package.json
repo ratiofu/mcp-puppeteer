@@ -15,7 +15,10 @@
     "build": "pnpm run typecheck && rm -rf dist && node esbuild.config.js",
     "typecheck": "tsc --noEmit",
     "start": "node dist/index.js",
-    "dev": "pnpm run build && pnpm run start",
+    "test": "./test/test-server.sh",
+    "dev": "concurrently \"esbuild --watch\" \"nodemon --watch dist --exec 'node dist/index.js && pnpm run restart-inspector' dist/index.js\"",
+    "inspector": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "restart-inspector": "pkill -f '@modelcontextprotocol/inspector' || true && sleep 1 && pnpm run inspector &",
     "prepublishOnly": "pnpm run build"
   },
   "keywords": [
@@ -27,14 +30,14 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.17.3",
-    "express": "5.1.0",
     "puppeteer-core": "24.17.0",
     "zod": "4.0.17"
   },
   "devDependencies": {
-    "@types/express": "5.0.3",
     "@types/node": "24.3.0",
+    "concurrently": "9.2.0",
     "esbuild": "0.25.9",
+    "nodemon": "3.1.10",
     "typescript": "5.9.2"
   },
   "pnpm": {

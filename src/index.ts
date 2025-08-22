@@ -1,77 +1,52 @@
-import puppeteer, { type Browser } from 'puppeteer-core';
-import express from "express";
 import { initBrowser } from './puppeteer.js';
 import { PuppeteerMcpServer } from './PuppeteerMcpServer.js';
-import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
-import http from 'http';
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
-const port = 7742;
+const sessionId = "pipe-session";
 
-function setupRoutes(app: express.Express, browser: Browser) {
-
-  const sessions = new Map<string, { transport: SSEServerTransport, server: PuppeteerMcpServer }>();
-
-  app.get("/sse", async (req: express.Request, res: express.Response) => {
-    // Disable response timeout
-    if (res.socket) res.socket.setTimeout(0);
-    res.setHeader('Connection', 'keep-alive');
-
-    const transport = new SSEServerTransport("/mcp", res);
-    const { sessionId } = transport;
-    console.log("new SSE session", sessionId);
-    const server = new PuppeteerMcpServer(sessionId, browser);
-    server.connect(transport);
-    sessions.set(sessionId, { transport, server });
-
-    // Send a heartbeat every 30 seconds to keep the connection alive
-    const heartbeatInterval = setInterval(() => res.write(":heartbeat\n\n"), 30_000);
-
-    transport.onclose = () => {
-      console.log("client disconnected", sessionId);
-      clearInterval(heartbeatInterval);
-      server.disconnect();
-      sessions.delete(sessionId);
-    }
-
-    // Handle client disconnect
-    req.on('close', () => {
-      console.log("client connection closed", sessionId);
-      clearInterval(heartbeatInterval);
-    });
-  });
-
-  app.post("/mcp", (req: express.Request, res: express.Response) => {
-    const url = new URL(req.originalUrl, `http://${req.headers.host}`);
-    const sessionId = url.searchParams.get('sessionId');
-    console.log("mcp", sessionId);
-    if (sessionId) {
-      const session = sessions.get(sessionId);
-      if (session) {
-        session.transport.handlePostMessage(req, res);
-      } else {
-        console.error("session not found", sessionId);
-        res.status(404).send('session not found');
-      }
-    } else {
-      console.error("missing sessionId parameter");
-      res.status(400).send('missing sessionId parameter');
-    }
-  });
-
-}
-
-// Initialize and start server
+// Initialize and start pipe transport server
 async function main() {
-  const browser = await initBrowser();
-  const app = express();
-  setupRoutes(app, browser);
+  try {
+    // Initialize browser
+    console.error('Connecting to Chrome...');
+    const browser = await initBrowser();
+    console.error('Successfully connected to Chrome');
 
-  const server = http.createServer(app);
-  server.timeout = 0; // Disable timeout
-  server.keepAliveTimeout = 0; // Disable keep-alive timeout
-  server.listen(port, () => {
-    console.log(`MCP server listening at http://localhost:${port}/mcp`);
-  });
+    // Create transport and server
+    const transport = new StdioServerTransport();
+    const server = new PuppeteerMcpServer(sessionId, browser);
+
+    // Handle process termination gracefully
+    process.on('SIGINT', async () => {
+      console.error('Received SIGINT, cleaning up...');
+      await server.disconnect();
+      process.exit(0);
+    });
+
+    process.on('SIGTERM', async () => {
+      console.error('Received SIGTERM, cleaning up...');
+      await server.disconnect();
+      process.exit(0);
+    });
+
+    // Handle transport close
+    transport.onclose = async () => {
+      console.error('Transport closed, cleaning up...');
+      await server.disconnect();
+      process.exit(0);
+    };
+
+    // Connect transport and server
+    await server.connect(transport);
+    console.error('MCP server started with pipe transport');
+
+  } catch (error) {
+    console.error('Error starting server:', error);
+    process.exit(1);
+  }
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  console.error('Unhandled error:', error);
+  process.exit(1);
+});

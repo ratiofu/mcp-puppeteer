@@ -6,7 +6,7 @@
   - Use esbuild for bundling
   - _Requirements: 4.1, 4.2_
 
-- [ ] 2. Update package.json dependencies and scripts
+- [x] 2. Update package.json dependencies and scripts
   - Remove `express` and `@types/express` from dependencies
   - Remove `ts-node` from dependencies
   - Move `@modelcontextprotocol/sdk` from devDependencies to dependencies
@@ -14,7 +14,7 @@
   - Update scripts for build, start, dev, and inspector workflows
   - _Requirements: 3.1, 3.2, 5.1, 5.2, 5.3_
 
-- [ ] 3. Rewrite server.ts to use pipe transport
+- [x] 3. Rewrite index.ts to use pipe transport
   - Replace Express server setup with StdioServerTransport initialization
   - Use existing CLI implementation pattern from `src/cli.ts` as reference
   - Remove HTTP session management and SSE transport code
@@ -22,7 +22,7 @@
   - Add proper error handling for browser connection failures
   - _Requirements: 1.1, 1.2, 1.3, 7.1, 7.2_
 
-- [ ] 4. Remove unused CLI file
+- [x] 4. Remove unused CLI file
   - Delete `src/cli.ts` since its functionality is now in the main server
   - _Requirements: 1.2_
 

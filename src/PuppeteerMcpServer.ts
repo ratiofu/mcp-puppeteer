@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import puppeteer, { type Browser, type Page } from "puppeteer-core";
+import { type Browser, type Page } from "puppeteer-core";
 import { z } from "zod";
 
 export class PuppeteerMcpServer extends McpServer {
@@ -142,8 +142,13 @@ export class PuppeteerMcpServer extends McpServer {
 
   async disconnect() {
     if (this.page) {
-      console.log("closing page for session", this.sessionId);
-      await this.page.close();
+      console.error("closing page for session", this.sessionId);
+      try {
+        await this.page.close();
+        this.page = null;
+      } catch (error) {
+        console.error("Error closing page:", error);
+      }
     }
   }
 

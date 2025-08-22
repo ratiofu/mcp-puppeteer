@@ -46,6 +46,7 @@ Convert the Puppeteer MCP Server from using Server-Sent Events (SSE) over HTTP t
 2. WHEN building THEN it SHALL perform type checking before bundling
 3. WHEN running THEN it SHALL execute from the bundled JavaScript, not TypeScript directly
 4. WHEN testing THEN it SHALL use MCP Inspector with the compiled server
+5. WHEN running automated tests THEN it SHALL validate MCP protocol functionality and tool availability
 
 ### Requirement 5
 

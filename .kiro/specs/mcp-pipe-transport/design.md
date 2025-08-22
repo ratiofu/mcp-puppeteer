@@ -26,7 +26,7 @@ Client → stdin/stdout → StdioServerTransport → PuppeteerMcpServer → Brow
 
 ### Modified Components
 
-#### `src/server.ts` (Complete Rewrite)
+#### `src/index.ts` (Complete Rewrite)
 - **Current**: Express server with SSE endpoints and session management
 - **New**: Simple initialization using `StdioServerTransport` pattern from CLI
 - **Responsibilities**: Initialize browser, create transport, connect server
@@ -46,8 +46,7 @@ Client → stdin/stdout → StdioServerTransport → PuppeteerMcpServer → Brow
 - No changes required - browser initialization remains the same
 
 #### `src/cli.ts`
-- Keep as reference implementation
-- May be removed or kept as alternative entry point
+- Removed - functionality incorporated into main server with enhancements
 
 ## Data Models
 
@@ -106,6 +105,7 @@ server.connect(transport);
     "build": "pnpm run typecheck && rm -rf dist && node esbuild.config.js",
     "typecheck": "tsc --noEmit",
     "start": "node dist/index.js",
+    "test": "./test/test-server.sh",
     "dev": "concurrently \"esbuild --watch\" \"nodemon --watch dist --exec 'node dist/index.js && pnpm run restart-inspector' dist/index.js\"",
     "inspector": "npx @modelcontextprotocol/inspector node dist/index.js",
     "restart-inspector": "pkill -f '@modelcontextprotocol/inspector' || true && sleep 1 && pnpm run inspector &",
@@ -142,9 +142,18 @@ server.connect(transport);
 ### Automated Testing Process
 1. **Type Check**: `pnpm run typecheck` validates TypeScript types
 2. **Build**: `pnpm run build` bundles application with esbuild
-3. **Inspector Testing**: `npx @modelcontextprotocol/inspector node dist/index.js`
-4. **Tool Validation**: Test all MCP tools through Inspector interface
-5. **Integration Testing**: Verify browser automation works end-to-end
+3. **Automated Test Script**: `pnpm run test` executes `test/test-server.sh` for MCP protocol validation
+4. **Inspector Testing**: `npx @modelcontextprotocol/inspector node dist/index.js`
+5. **Tool Validation**: Test all MCP tools through Inspector interface
+6. **Integration Testing**: Verify browser automation works end-to-end
+
+### Test Script (`test/test-server.sh`)
+- **Build Validation**: Automatically builds the server before testing
+- **MCP Initialize**: Tests server response to MCP initialize protocol
+- **Tools Listing**: Validates all expected tools are available (navigate, list_tab_urls, click, take_screenshot, get_html, get_console)
+- **Chrome Detection**: Provides clear instructions if Chrome/Chromium isn't running with debug port
+- **No External Dependencies**: Uses only shell built-ins, no jq or other tools required
+- **Quick Feedback**: Completes in seconds with clear pass/fail results
 
 ### Development Testing Process
 1. **Full Auto-restart Development**: Use `pnpm run dev` for auto-rebuild, server restart, and inspector restart

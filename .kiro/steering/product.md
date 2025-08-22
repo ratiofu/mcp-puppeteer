@@ -2,7 +2,7 @@
 
 This is a **Puppeteer MCP Server** - a Model Context Protocol server that provides browser automation capabilities through Puppeteer. It enables AI agents to control Chrome browsers remotely via a standardized protocol interface.
 
-✨ **The key difference of this implementation to other MCP Puppeteer implementations is that it enables access to the raw DOM content of the page**
+✨ **The key difference of this implementation to other MCP Puppeteer implementations is that it enables access to the raw DOM content of the page and the console!**
 
 ## Core Purpose
 - Bridge between AI agents and browser automation

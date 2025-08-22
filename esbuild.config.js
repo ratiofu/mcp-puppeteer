@@ -10,7 +10,6 @@ await build({
     minify: true,
     external: [
         'puppeteer-core',
-        'express',
         '@modelcontextprotocol/sdk',
         'zod'
     ],
