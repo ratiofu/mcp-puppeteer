@@ -1,5 +1,7 @@
 # A simple MCP Server for controlling Chrome via Puppeteer
 
+✨ **The key difference of this implementation to other MCP Puppeteer implementations is that it enables access to the raw DOM content of the page**
+
 ## Usage
 
 Note that this is using `puppeteer-core` and does not install additional browsers. The expectation here is that you know how to start Chrome with the remote debugging port enabled. On the Mac, for example, this may look something like this:

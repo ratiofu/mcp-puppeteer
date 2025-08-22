@@ -2,6 +2,10 @@
   "name": "puppeteer-mcp",
   "version": "1.0.0",
   "description": "MCP server for controlling Chrome via Puppeteer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ratiofu/mcp-puppeteer"
+  },
   "main": "src/server.ts",
   "type": "module",
   "scripts": {
@@ -12,18 +16,18 @@
     "puppeteer",
     "chrome"
   ],
-  "author": "tjung@clari.com",
+  "author": "@ratiofu",
   "license": "MIT",
   "dependencies": {
     "express": "5.1.0",
-    "puppeteer-core": "24.6.1",
+    "puppeteer-core": "24.17.0",
     "ts-node": "10.9.2",
-    "typescript": "5.8.3",
-    "zod": "3.24.3"
+    "typescript": "5.9.2",
+    "zod": "4.0.17"
   },
   "devDependencies": {
-    "@types/node": "22.14.1",
-    "@modelcontextprotocol/sdk": "1.10.1",
-    "@types/express": "5.0.1"
+    "@modelcontextprotocol/sdk": "1.17.3",
+    "@types/express": "5.0.3",
+    "@types/node": "24.3.0"
   }
 }
