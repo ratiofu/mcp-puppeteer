@@ -13,7 +13,10 @@ Add this to your MCP client configuration:
   "mcpServers": {
     "puppeteer": {
       "command": "npx",
-      "args": ["@ratiofu/mcp-puppeteer"]
+      "args": [
+        "-y",
+        "@ratiofu/mcp-puppeteer"
+      ]
     }
   }
 }
