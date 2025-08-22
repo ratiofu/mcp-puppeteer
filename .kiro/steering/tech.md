@@ -9,7 +9,7 @@
 - **puppeteer-core** - Browser automation (no bundled browser)
 - **express** - HTTP server and routing
 - **@modelcontextprotocol/sdk** - MCP protocol implementation
-- **zod** - Input validation and schema definition
+- **zod** - Input validation and schema definition (version compatibility critical)
 
 ## Package Management
 - **pnpm** - Primary package manager
@@ -101,6 +101,13 @@ pnpx @modelcontextprotocol/inspector
 - Session-based architecture with proper cleanup
 - Console logging includes session IDs for traceability
 
+### MCP Protocol Compatibility
+- **Zod Version Compatibility**: The MCP SDK requires Zod ^3.23.8, not Zod 4.x
+- **Schema Definition**: Use `z.string().url()` instead of `z.url()` for URL validation in Zod 3.x
+- **Tool Parameter Schemas**: Ensure Zod schemas are properly converted to JSON Schema for MCP clients
+- **Version Conflicts**: Always check MCP SDK dependencies when updating Zod versions
+- **Testing**: Verify tool schemas appear correctly in `tools/list` responses after Zod changes
+
 ## Testing Approach
 
 ### Manual Testing Process
@@ -114,6 +121,8 @@ pnpx @modelcontextprotocol/inspector
 - Verify screenshot capture returns base64 PNG data
 - Confirm console logging captures browser output
 - Validate session cleanup on disconnect
+- **Schema Validation**: Test `tools/list` response to ensure parameter schemas are properly exposed
+- **Parameter Testing**: Verify tool calls work with required parameters (e.g., navigate with URL)
 
 ### Common Test Scenarios
 - Navigate to different websites

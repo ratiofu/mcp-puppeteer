@@ -1,8 +1,8 @@
 # Puppeteer MCP Server
 
-✨ **The key difference of this implementation to other MCP Puppeteer implementations is that it enables access to the raw DOM content of the page and the console!**
-
 A Model Context Protocol (MCP) server that provides browser automation capabilities through Puppeteer. This server enables AI assistants to control Chrome browsers, take screenshots, extract content, and interact with web pages.
+
+✨ **The key difference of this implementation compared to others is that it enables access to the raw DOM content of the page and the console!** ✨
 
 ## MCP Client Configuration
 

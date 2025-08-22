@@ -46,7 +46,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.17.3",
     "puppeteer-core": "24.17.0",
-    "zod": "4.0.17"
+    "zod": "3.24.3"
   },
   "devDependencies": {
     "@types/node": "24.3.0",
