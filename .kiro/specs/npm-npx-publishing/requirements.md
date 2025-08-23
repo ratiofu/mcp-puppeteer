@@ -26,7 +26,7 @@ This feature enables publishing the Puppeteer MCP Server to the public NPM regis
 1. WHEN I run `npx @ratiofu/mcp-puppeteer` THEN the system SHALL download and execute the latest version
 2. WHEN the server starts via npx THEN it SHALL display the same startup messages as local execution
 3. WHEN using npx THEN the server SHALL use stdio transport for MCP communication
-4. IF Chrome is not running with debug port THEN the system SHALL display helpful error messages with setup instructions
+4. IF Chromium is not running with debug port THEN the system SHALL display helpful error messages with setup instructions
 
 ### Requirement 3
 
@@ -48,7 +48,7 @@ This feature enables publishing the Puppeteer MCP Server to the public NPM regis
 
 #### Acceptance Criteria
 
-1. WHEN users search NPM THEN the package SHALL appear with relevant keywords (mcp, puppeteer, chrome, browser, automation)
+1. WHEN users search NPM THEN the package SHALL appear with relevant keywords (mcp, puppeteer, chromium, browser, automation)
 2. WHEN viewing the package page THEN it SHALL display a clear description and usage instructions
 3. WHEN checking package details THEN it SHALL show the correct repository URL and license
 4. WHEN installing THEN the package SHALL specify the correct Node.js version requirements
@@ -61,5 +61,5 @@ This feature enables publishing the Puppeteer MCP Server to the public NPM regis
 
 1. WHEN I view the NPM package page THEN it SHALL include MCP client configuration examples
 2. WHEN the server starts THEN it SHALL log helpful status messages to stderr
-3. WHEN Chrome is not available THEN it SHALL provide clear setup instructions in error messages
+3. WHEN Chromium is not available THEN it SHALL provide clear setup instructions in error messages
 4. IF the server encounters errors THEN it SHALL display actionable error messages with solutions

@@ -14,7 +14,7 @@ import {
  */
 const defaultConfig: ServerConfig = {
   sessionId: DEFAULT_CONFIG.SESSION_ID,
-  chromeDebugPort: DEFAULT_CONFIG.CHROME_DEBUG_PORT
+  chromiumDebugPort: DEFAULT_CONFIG.CHROMIUM_DEBUG_PORT
 };
 
 /**
@@ -44,9 +44,9 @@ async function startServer(
 ): Promise<void> {
   try {
     // Initialize browser
-    console.error('Connecting to Chrome...');
+    console.error('Connecting to Chromium...');
     const browser = await initBrowser();
-    console.error('Successfully connected to Chrome');
+    console.error('Successfully connected to Chromium');
 
     // Create transport and server
     const transport = new StdioServerTransport();

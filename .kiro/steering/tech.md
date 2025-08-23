@@ -18,7 +18,7 @@
 ## Prerequisites
 - Node.js 22+ (use `nvm use` to switch to project version)
 - pnpm package manager
-- Chrome browser with remote debugging enabled
+- Chromium browser with remote debugging enabled
 
 ## Build System
 - **Type Checking**: TypeScript compiler validates types without emitting files
@@ -49,8 +49,8 @@ pnpm run start
 # Or build and start in one command (development)
 pnpm run dev
 
-# Start Chrome with remote debugging (required)
-open -a "Google Chrome" --args --remote-debugging-port=9222
+# Start Chromium with remote debugging (required)
+chromium --remote-debugging-port=9222
 ```
 
 ### NPM Publishing
@@ -80,7 +80,7 @@ pnpx @modelcontextprotocol/inspector
 
 ## Configuration
 - **Server Port**: 7742 (hardcoded)
-- **Chrome Debug Port**: 9222 (expected)
+- **Chromium Debug Port**: 9222 (expected)
 - **Transport**: Server-Sent Events (SSE) over HTTP
 - **Session Management**: In-memory with automatic cleanup
 
@@ -153,7 +153,7 @@ fi
 ## Testing Approach
 
 ### Manual Testing Process
-1. Start Chrome with remote debugging: `--remote-debugging-port=9222`
+1. Start Chromium with remote debugging: `--remote-debugging-port=9222`
 2. Build and run the server: `pnpm run dev` (or `pnpm run build && pnpm run start`)
 3. Use MCP Inspector to test tools: `pnpx @modelcontextprotocol/inspector`
 4. Connect to: `http://localhost:7742/sse`

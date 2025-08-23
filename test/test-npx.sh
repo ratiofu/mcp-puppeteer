@@ -59,7 +59,7 @@ fi
 # Test 3: Verify startup messages are displayed
 echo "Test 3: Testing startup messages..."
 OUTPUT=$(echo '{}' | (run_with_timeout 3 npx @ratiofu/mcp-puppeteer) 2>&1 || true)
-if echo "$OUTPUT" | grep -q "Connecting to Chrome"; then
+if echo "$OUTPUT" | grep -q "Connecting to Chromium"; then
     echo "✅ Startup messages are displayed"
 else
     echo "❌ Startup messages not found - Server may not be starting correctly"
@@ -78,14 +78,14 @@ else
     exit 1
 fi
 
-# Test 5: Test error handling when Chrome is not available
+# Test 5: Test error handling when Chromium is not available
 echo "Test 5: Testing error handling..."
-# This test assumes Chrome might not be running with debug port
+# This test assumes Chromium might not be running with debug port
 # The error handling should provide helpful messages
-if echo "$OUTPUT" | grep -q -E "(Chrome|browser|debug|port)"; then
-    echo "✅ Error handling provides Chrome-related guidance"
+if echo "$OUTPUT" | grep -q -E "(Chromium|browser|debug|port)"; then
+    echo "✅ Error handling provides Chromium-related guidance"
 else
-    echo "ℹ️  Chrome appears to be available (no error to test)"
+    echo "ℹ️  Chromium appears to be available (no error to test)"
 fi
 
 echo "=================================================="

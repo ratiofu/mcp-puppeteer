@@ -46,8 +46,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test-utils/test-setup.ts'],
     testTimeout: 30000, // Allow time for browser operations
-    hookTimeout: 5000,
-    teardownTimeout: 5000
+    hookTimeout: 5_000,
+    teardownTimeout: 5_000
   },
   include: ['src/**/_tests/**/*.test.ts'],
   exclude: ['node_modules', 'dist', 'src/**/_tests/**/test-resources/**']
@@ -416,7 +416,7 @@ interface IntegrationTestScenario {
 
 ### Test Error Categories
 
-1. **Browser Connection Errors**: Handle cases where Chrome is not available
+1. **Browser Connection Errors**: Handle cases where Chromium is not available
 2. **Tool Execution Errors**: Validate error responses for invalid inputs
 3. **Resource Cleanup Errors**: Ensure proper cleanup even when tests fail
 4. **Timeout Errors**: Handle long-running browser operations

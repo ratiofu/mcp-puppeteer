@@ -18,7 +18,7 @@ The NPM package will:
 - **Binary Entry Point**: Use `bin` field in package.json to enable `npx` execution
 - **Executable Script**: Add shebang to compiled output for direct execution
 - **MCP Configuration**: Provide clear examples for MCP client configuration
-- **Error Handling**: Provide user-friendly error messages for Chrome setup issues
+- **Error Handling**: Provide user-friendly error messages for Chromium setup issues
 
 ## Components and Interfaces
 
@@ -48,7 +48,7 @@ The NPM package will:
 
 ### Main Server (`src/index.ts`)
 - **Startup Messages**: Clear logging for connection status
-- **Error Messages**: Provide actionable guidance for Chrome setup
+- **Error Messages**: Provide actionable guidance for Chromium setup
 - **Pure Module**: Remains a standard JavaScript module without executable concerns
 
 ### Local Testing Infrastructure
@@ -85,9 +85,9 @@ interface PackageInfo {
 
 ## Error Handling
 
-### Chrome Connection Errors
-- **No Debug Port**: Detect when Chrome isn't running with remote debugging
-- **Connection Refused**: Provide setup instructions for Chrome launch
+### Chromium Connection Errors
+- **No Debug Port**: Detect when Chromium isn't running with remote debugging
+- **Connection Refused**: Provide setup instructions for Chromium launch
 - **Clear Error Messages**: Log helpful guidance to stderr for MCP client users
 
 ### NPM/npx Errors  
@@ -165,7 +165,7 @@ run_with_timeout() {
 
 ### Phase 3: Entry Point Enhancement
 - Improve startup messages for better user experience
-- Add Chrome setup validation and error guidance
+- Add Chromium setup validation and error guidance
 - Ensure main module works in all contexts (direct execution, import, npx)
 
 ### Phase 4: Local Testing Infrastructure
@@ -175,7 +175,7 @@ run_with_timeout() {
 
 ### Phase 5: Documentation and Publishing
 - Update README with npx usage instructions and MCP configuration examples
-- Add troubleshooting guide for Chrome setup issues
+- Add troubleshooting guide for Chromium setup issues
 - Publish to NPM registry with proper versioning
 
 ## Security Considerations
@@ -188,7 +188,7 @@ run_with_timeout() {
 ### Runtime Security  
 - **Stdio Transport**: Uses stdin/stdout, no network binding required
 - **Process Isolation**: Each npx execution runs in separate process
-- **Chrome Isolation**: Browser sessions isolated per server instance
+- **Chromium Isolation**: Browser sessions isolated per server instance
 
 ## Performance Considerations
 

@@ -6,15 +6,15 @@
 export interface ServerConfig {
   /** Unique identifier for the server session */
   sessionId: string;
-  /** Chrome remote debugging port */
-  chromeDebugPort?: number;
+  /** Chromium remote debugging port */
+  chromiumDebugPort?: number;
 }
 
 /**
  * Browser connection configuration
  */
 export interface BrowserConnectionConfig {
-  /** URL for connecting to Chrome remote debugging */
+  /** URL for connecting to Chromium remote debugging */
   browserURL: string;
   /** Default viewport settings */
   defaultViewport: null | { width: number; height: number };
@@ -67,7 +67,7 @@ export interface ServerLifecycleEvents {
  * Default configuration values
  */
 export const DEFAULT_CONFIG = {
-  CHROME_DEBUG_PORT: 9222,
+  CHROMIUM_DEBUG_PORT: 9222,
   SESSION_ID: 'pipe-session',
   BROWSER_URL: 'http://localhost:9222'
 } as const;
@@ -76,8 +76,8 @@ export const DEFAULT_CONFIG = {
  * Error messages for internal operations
  */
 export const INTERNAL_ERROR_MESSAGES = {
-  CHROME_CONNECTION_FAILED: 'Failed to connect to Chrome. Make sure Chrome is running with remote debugging enabled.',
-  CHROME_LAUNCH_INSTRUCTION: 'Launch Chrome with: open -a "Google Chrome" --args --remote-debugging-port=9222',
+  CHROMIUM_CONNECTION_FAILED: 'Failed to connect to Chromium. Make sure Chromium is running with remote debugging enabled.',
+  CHROMIUM_LAUNCH_INSTRUCTION: 'Launch Chromium with: chromium --remote-debugging-port=9222',
   SERVER_STARTUP_FAILED: 'Error starting server',
   UNHANDLED_ERROR: 'Unhandled error',
   BROWSER_INIT_FAILED: 'Browser initialization failed',

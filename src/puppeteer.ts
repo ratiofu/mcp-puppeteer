@@ -17,11 +17,11 @@ export async function initBrowser(config?: Partial<BrowserConnectionConfig>): Pr
 
   try {
     const browser = await puppeteer.connect(connectionConfig);
-    console.error('Successfully connected to Chrome instance');
+    console.error('Successfully connected to Chromium instance');
     return browser;
   } catch (error) {
-    console.error(INTERNAL_ERROR_MESSAGES.CHROME_CONNECTION_FAILED);
-    console.error(INTERNAL_ERROR_MESSAGES.CHROME_LAUNCH_INSTRUCTION);
+    console.error(INTERNAL_ERROR_MESSAGES.CHROMIUM_CONNECTION_FAILED);
+    console.error(INTERNAL_ERROR_MESSAGES.CHROMIUM_LAUNCH_INSTRUCTION);
     console.error('Error details:', error instanceof Error ? error.message : String(error));
     process.exit(1);
   }

@@ -9,12 +9,12 @@ export default defineConfig({
     globals: true,
 
     // Setup files to run before tests
-    setupFiles: ['./src/test-utils/test-setup.ts'],
+    setupFiles: ['./src/test-utils/vitest-setup.ts'],
 
     // Timeout settings for browser operations
     testTimeout: 30000, // 30 seconds for individual tests
-    hookTimeout: 5000,  // 5 seconds for setup/teardown hooks
-    teardownTimeout: 5000, // 5 seconds for cleanup
+    hookTimeout: 5_000,  // 5 seconds for setup/teardown hooks
+    teardownTimeout: 5_000, // 5 seconds for cleanup
 
     // Test file patterns - look for .test.ts files in _tests directories
     include: ['src/**/_tests/**/*.test.ts'],

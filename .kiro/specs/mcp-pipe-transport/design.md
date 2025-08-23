@@ -151,7 +151,7 @@ server.connect(transport);
 - **Build Validation**: Automatically builds the server before testing
 - **MCP Initialize**: Tests server response to MCP initialize protocol
 - **Tools Listing**: Validates all expected tools are available (navigate, list_tab_urls, click, take_screenshot, get_html, get_console)
-- **Chrome Detection**: Provides clear instructions if Chrome/Chromium isn't running with debug port
+- **Chromium Detection**: Provides clear instructions if Chromium isn't running with debug port
 - **No External Dependencies**: Uses only shell built-ins, no jq or other tools required
 - **Quick Feedback**: Completes in seconds with clear pass/fail results
 
@@ -160,7 +160,7 @@ server.connect(transport);
 2. **Manual Testing**: Use `pnpm run inspector` for one-time testing
 3. **Inspector Restart**: Use `pnpm run restart-inspector` to manually restart inspector
 4. **Production Testing**: Use `pnpm run build && pnpm start` for final testing
-5. **Browser Testing**: Verify Chrome connection and all tools work
+5. **Browser Testing**: Verify Chromium connection and all tools work
 
 ### Integration Points
 - **MCP Client Compatibility**: Test with MCP Inspector and other clients

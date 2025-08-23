@@ -1,7 +1,7 @@
 {
   "name": "@ratiofu/mcp-puppeteer",
   "version": "1.0.0",
-  "description": "MCP server for controlling Chrome via Puppeteer",
+  "description": "MCP server for controlling Chromium via Puppeteer",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ratiofu/mcp-puppeteer.git"
@@ -40,6 +40,7 @@
   "keywords": [
     "mcp",
     "puppeteer",
+    "chromium",
     "chrome",
     "browser",
     "automation"

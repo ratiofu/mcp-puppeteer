@@ -1,19 +1,19 @@
 # Product Overview
 
-This is a **Puppeteer MCP Server** - a Model Context Protocol server that provides browser automation capabilities through Puppeteer. It enables AI agents to control Chrome browsers remotely via a standardized protocol interface.
+This is a **Puppeteer MCP Server** - a Model Context Protocol server that provides browser automation capabilities through Puppeteer. It enables AI agents to control Chromium browsers remotely via a standardized protocol interface.
 
 ✨ **The key difference of this implementation compared to others is that it enables access to the raw DOM content of the page and the console!**
 
 ## Core Purpose
 - Bridge between AI agents and browser automation
 - Provide standardized MCP tools for web interaction
-- Enable remote Chrome control through Puppeteer
+- Enable remote Chromium control through Puppeteer
 - Support concurrent browser sessions with proper isolation
 - Give the AI agent access to the current page's DOM
 
 ## Key Components
 - **MCP Server**: Implements the Model Context Protocol for browser automation
-- **Puppeteer Integration**: Uses puppeteer-core to control Chrome via remote debugging
+- **Puppeteer Integration**: Uses puppeteer-core to control Chromium via remote debugging
 - **Express Server**: Provides HTTP/SSE transport for MCP communication
 - **Session Management**: Handles multiple concurrent browser sessions
 
@@ -50,5 +50,5 @@ This is a **Puppeteer MCP Server** - a Model Context Protocol server that provid
 ### Roadmap
 - Convert to using local pipe instead of SSE
 - Publish as public NPM package so it can be run via `npx`
-- If the already running Chrome instance does not have its debug port enables, offer to install Chromium and use that
+- If the already running Chromium instance does not have its debug port enabled, offer to install Chromium and use that
 - Automatically start Chromium if it is available, but offer a flag to try to connect to a running instance instead and give up if no open debug port can be found

@@ -25,7 +25,7 @@ export class PuppeteerMcpServer extends McpServer {
     super({
       name: 'puppeteer-mcp',
       version: '1.0.0',
-      description: 'MCP server for controlling Chrome via Puppeteer',
+      description: 'MCP server for controlling Chromium via Puppeteer',
     })
     this.sessionId = sessionId;
     this.browser = browser;

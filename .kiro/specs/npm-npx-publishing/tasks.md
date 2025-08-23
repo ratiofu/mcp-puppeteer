@@ -28,7 +28,7 @@
 - [x] 4. Update README with NPM and npx usage instructions
   - Add installation section with npm install command
   - Include MCP client configuration examples using npx
-  - Add troubleshooting section for Chrome setup
+  - Add troubleshooting section for Chromium setup
   - Update existing documentation to reflect NPM usage
   - _Requirements: 4.1, 4.2, 5.1, 5.3_
 
