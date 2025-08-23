@@ -64,6 +64,15 @@ npm pack
 
 ### Testing
 ```bash
+# Run unit tests with vitest
+pnpm test
+
+# Run tests in watch mode
+pnpm run test:watch
+
+# Run tests with coverage reporting
+pnpm run test:coverage
+
 # Use MCP Inspector for interactive testing
 pnpx @modelcontextprotocol/inspector
 # Connect to: http://localhost:7742/sse
@@ -107,6 +116,39 @@ pnpx @modelcontextprotocol/inspector
 - **Tool Parameter Schemas**: Ensure Zod schemas are properly converted to JSON Schema for MCP clients
 - **Version Conflicts**: Always check MCP SDK dependencies when updating Zod versions
 - **Testing**: Verify tool schemas appear correctly in `tools/list` responses after Zod changes
+
+## Testing Infrastructure
+
+### Unit Testing with Vitest
+- **Test Framework**: Vitest with v8 coverage provider
+- **Test Location**: `src/**/_tests/**/*.test.ts` pattern
+- **Coverage Reports**: Text, LCOV, HTML, and JSON formats
+- **Coverage Thresholds**: 80% for lines, functions, branches, and statements
+- **Test Environment**: Node.js with global test functions enabled
+- **Timeouts**: 30s for tests, 5s for hooks (optimized for browser operations)
+
+### Coverage Analysis
+- **JSON Report**: `coverage/coverage-final.json` for programmatic analysis
+- **LCOV Report**: `coverage/lcov.info` for CI/CD integration
+- **HTML Report**: `coverage/lcov-report/index.html` for browser viewing
+- **Console Output**: Real-time coverage summary during test runs
+
+### Coverage Validation
+```bash
+# Check if coverage meets thresholds programmatically
+if [ -f "coverage/coverage-final.json" ]; then
+  echo "Coverage report available for analysis"
+  # Parse JSON for automated checks - structure includes:
+  # - Per-file coverage data with statement/branch/function maps
+  # - Line-by-line coverage tracking
+  # - Branch coverage analysis for conditional logic
+  # - Function coverage with execution counts
+fi
+
+# Example: Extract overall coverage percentage from JSON
+# The JSON contains detailed per-file coverage data that can be
+# programmatically analyzed for CI/CD pipeline integration
+```
 
 ## Testing Approach
 
