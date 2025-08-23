@@ -13,7 +13,7 @@ export default defineConfig({
 
     // Timeout settings for browser operations
     testTimeout: 30000, // 30 seconds for individual tests
-    hookTimeout: 5_000,  // 10 seconds for setup/teardown hooks
+    hookTimeout: 5_000,  // 5 seconds for setup/teardown hooks
     teardownTimeout: 5_000, // 5 seconds for cleanup
 
     // Test file patterns - look for .test.ts files in _tests directories
