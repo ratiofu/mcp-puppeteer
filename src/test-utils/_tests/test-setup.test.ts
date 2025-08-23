@@ -23,7 +23,7 @@ describe('Test Setup and Browser Management', () => {
       const browser = await getTestBrowser();
       
       expect(browser).toBeDefined();
-      expect(browser.isConnected()).toBe(true);
+      expect(browser.connected).toBe(true);
     });
 
     it('should return the same browser instance on multiple calls', async () => {
@@ -103,7 +103,7 @@ describe('Test Setup and Browser Management', () => {
       expect(title).toBe('Test Page');
       
       // Browser should still be connected
-      expect(browser.isConnected()).toBe(true);
+      expect(browser.connected).toBe(true);
     });
   });
 });
