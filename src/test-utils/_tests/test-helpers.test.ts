@@ -12,7 +12,7 @@ import {
   createTestHtml,
   getConsoleLogs,
   clearConsole
-} from '../test-helpers.js';
+} from '../index.js';
 
 describe('Test Helpers', () => {
   let testPage: Page | null = null;

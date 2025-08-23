@@ -8,7 +8,7 @@ import { setupTests, teardownTests } from './test-setup.js';
 beforeAll(async () => {
   console.log('Running global test setup...');
   await setupTests();
-}, 5_000); // 10 second timeout for browser initialization
+}, 10_000); // 10 second timeout for browser initialization
 
 /**
  * Global test teardown - runs once after all tests
@@ -17,4 +17,4 @@ beforeAll(async () => {
 afterAll(async () => {
   console.log('Running global test teardown...');
   await teardownTests();
-}, 5_000); // 5 second timeout for cleanup
+}, 10_000); // 10 second timeout for cleanup

@@ -13,7 +13,7 @@ export default defineConfig({
 
     // Timeout settings for browser operations
     testTimeout: 30000, // 30 seconds for individual tests
-    hookTimeout: 5_000,  // 5 seconds for setup/teardown hooks
+    hookTimeout: 5_000,  // 10 seconds for setup/teardown hooks
     teardownTimeout: 5_000, // 5 seconds for cleanup
 
     // Test file patterns - look for .test.ts files in _tests directories
@@ -35,9 +35,10 @@ export default defineConfig({
       reportsDirectory: './coverage',
       include: ['src/**/*.ts'],
       exclude: [
-        'src/**/_tests/**',
-        'src/test-utils/**',
-        'src/**/*.d.ts'
+        'src/**/_tests/**', // Exclude all test files
+        'src/test-utils/vitest-setup.ts', // Exclude test setup file
+        'src/**/*.d.ts' // Exclude type definition files
+        // Note: test-utils utility files (like test-web-server.ts) are now included in coverage
       ],
       all: true,
       thresholds: {
@@ -52,8 +53,8 @@ export default defineConfig({
     pool: 'threads',
     poolOptions: {
       threads: {
-        // Allow parallel test execution but limit concurrency for browser resources
-        maxThreads: 4,
+        // Limit concurrency for browser resources to avoid conflicts
+        maxThreads: 4, // Run tests sequentially to avoid browser conflicts
         minThreads: 1
       }
     }

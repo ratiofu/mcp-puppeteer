@@ -90,7 +90,7 @@ async function launchTestBrowser(): Promise<Browser> {
         '--disable-dev-shm-usage',
         '--disable-web-security',
         '--disable-features=VizDisplayCompositor',
-        '--remote-debugging-port=9223', // Different port to avoid conflicts
+        `--remote-debugging-port=${9223 + Math.floor(Math.random() * 1000)}`, // Random port to avoid conflicts
         `--user-data-dir=/tmp/chromium-test-profile-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`, // Unique profile per run
         '--no-first-run',
         '--disable-default-apps'

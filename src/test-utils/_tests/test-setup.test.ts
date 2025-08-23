@@ -5,7 +5,7 @@ import {
   isTestBrowserAvailable, 
   createTestPage,
   handleBrowserConnectionError
-} from '../test-setup.js';
+} from '../index.js';
 
 describe('Test Setup and Browser Management', () => {
   let testPage: Page | null = null;
