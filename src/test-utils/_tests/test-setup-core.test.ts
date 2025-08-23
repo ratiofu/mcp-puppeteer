@@ -1,16 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { Page } from 'puppeteer-core';
 import {
   getTestBrowser,
   isTestBrowserAvailable,
   createTestPage,
   handleBrowserConnectionError,
-  cleanupTestBrowser,
   setupTests,
-  teardownTests
+  teardownTests,
+  cleanupTestBrowser
 } from '../index.js';
 
-describe('Test Setup and Browser Management', () => {
+describe('Test Setup - Core Functions', () => {
   let testPage: Page | null = null;
 
   afterEach(async () => {
@@ -116,112 +116,9 @@ describe('Test Setup and Browser Management', () => {
       expect(isTestBrowserAvailable()).toBe(true);
     });
 
-    it('should handle teardown gracefully', async () => {
-      // Ensure browser is running first
-      await getTestBrowser();
-      expect(isTestBrowserAvailable()).toBe(true);
-
-      await expect(teardownTests()).resolves.toBeUndefined();
-    });
-
     it('should handle teardown when browser is already closed', async () => {
       // This should not throw even if browser is not running
       await expect(teardownTests()).resolves.toBeUndefined();
-    });
-  });
-
-  describe('browser cleanup', () => {
-    it('should clean up browser resources', async () => {
-      // Start with a fresh browser
-      const browser = await getTestBrowser();
-      expect(browser.connected).toBe(true);
-
-      // Create a test page
-      testPage = await createTestPage('cleanup-test');
-      expect(testPage.isClosed()).toBe(false);
-
-      // Cleanup should close everything
-      await cleanupTestBrowser();
-
-      // Page should be closed after cleanup
-      expect(testPage.isClosed()).toBe(true);
-      testPage = null; // Prevent afterEach from trying to close it again
-    });
-
-    it('should handle cleanup errors gracefully', async () => {
-      // This should not throw even if there's nothing to clean up
-      await expect(cleanupTestBrowser()).resolves.toBeUndefined();
-    });
-  });
-
-  describe('environment variable handling', () => {
-    it('should respect SHOW_BROWSER environment variable', async () => {
-      // Test with SHOW_BROWSER=true (this tests the shouldShowBrowser function)
-      const originalEnv = process.env.SHOW_BROWSER;
-
-      try {
-        process.env.SHOW_BROWSER = 'true';
-
-        // Clean up any existing browser first
-        await cleanupTestBrowser();
-
-        // Get a new browser (this will use the environment variable)
-        const browser = await getTestBrowser();
-        expect(browser.connected).toBe(true);
-
-        // Reset for other tests
-        await cleanupTestBrowser();
-      } finally {
-        // Restore original environment
-        if (originalEnv !== undefined) {
-          process.env.SHOW_BROWSER = originalEnv;
-        } else {
-          delete process.env.SHOW_BROWSER;
-        }
-      }
-    });
-
-    it('should handle SHOW_BROWSER=1 format', async () => {
-      const originalEnv = process.env.SHOW_BROWSER;
-
-      try {
-        process.env.SHOW_BROWSER = '1';
-
-        // Clean up any existing browser first
-        await cleanupTestBrowser();
-
-        // Get a new browser
-        const browser = await getTestBrowser();
-        expect(browser.connected).toBe(true);
-
-        // Reset for other tests
-        await cleanupTestBrowser();
-      } finally {
-        // Restore original environment
-        if (originalEnv !== undefined) {
-          process.env.SHOW_BROWSER = originalEnv;
-        } else {
-          delete process.env.SHOW_BROWSER;
-        }
-      }
-    });
-  });
-
-  describe('page creation error handling', () => {
-    it('should handle page creation failures gracefully', async () => {
-      // This tests the error handling in createTestPage
-      const browser = await getTestBrowser();
-
-      // Mock newPage to throw an error
-      const originalNewPage = browser.newPage;
-      browser.newPage = vi.fn().mockRejectedValue(new Error('Page creation failed'));
-
-      try {
-        await expect(createTestPage('error-test')).rejects.toThrow('Failed to create test page for error-test: Page creation failed');
-      } finally {
-        // Restore original method
-        browser.newPage = originalNewPage;
-      }
     });
   });
 
@@ -255,18 +152,6 @@ describe('Test Setup and Browser Management', () => {
       // This tests the case where sharedBrowser is null
       // We can't easily set it to null from outside, but we can test after cleanup
       expect(typeof isTestBrowserAvailable()).toBe('boolean');
-    });
-
-    it('should handle multiple cleanup calls', async () => {
-      // Ensure browser exists
-      await getTestBrowser();
-
-      // Multiple cleanups should not cause errors
-      await cleanupTestBrowser();
-      await cleanupTestBrowser();
-      await cleanupTestBrowser();
-
-      expect(isTestBrowserAvailable()).toBe(false);
     });
 
     it('should handle page close errors during cleanup', async () => {

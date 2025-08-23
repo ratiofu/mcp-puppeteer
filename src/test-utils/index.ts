@@ -11,3 +11,6 @@ export * from './test-web-server.js';
 
 // In-memory transport for testing
 export * from './test-transport.js';
+
+// MCP test client wrapper
+export * from './mcp-test-client.js';

@@ -73,9 +73,6 @@ pnpm run test:watch
 # Run tests with coverage reporting (REQUIRED)
 pnpm run test:coverage
 
-# Analyze coverage report and get actionable insights
-node scripts/analyze-coverage.js
-
 # Use MCP Inspector for interactive testing
 pnpx @modelcontextprotocol/inspector
 # Connect to: http://localhost:7742/sse
@@ -115,8 +112,8 @@ pnpx @modelcontextprotocol/inspector
 
 ### Test Coverage Best Practices
 - **Always run tests with coverage**: Use `pnpm run test:coverage` instead of `pnpm test`
-- **Analyze before writing**: Run `node scripts/analyze-coverage.js` to identify gaps
-- **Target specific lines**: Focus on uncovered lines shown in coverage analysis
+- **Analyze coverage reports**: Review `coverage/lcov.info` and HTML reports to identify gaps
+- **Target specific lines**: Focus on uncovered lines shown in coverage reports
 - **Maintain 80% threshold**: Lines, functions, branches, and statements must be ≥80%
 - **Test edge cases**: Ensure error paths and boundary conditions are covered
 - **Use coverage to guide refactoring**: High coverage enables safe code changes
@@ -140,31 +137,27 @@ pnpx @modelcontextprotocol/inspector
 
 ### Coverage Analysis
 - **JSON Report**: `coverage/coverage-final.json` for programmatic analysis
-- **LCOV Report**: `coverage/lcov.info` for CI/CD integration
+- **LCOV Report**: `coverage/lcov.info` for CI/CD integration and detailed line-by-line analysis
 - **HTML Report**: `coverage/lcov-report/index.html` for browser viewing
 - **Console Output**: Real-time coverage summary during test runs
-- **Coverage Helper**: `scripts/analyze-coverage.js` provides actionable insights
 
 ### Coverage Validation & Analysis
 ```bash
 # Always run tests with coverage for development
 pnpm run test:coverage
 
-# Analyze coverage and get specific improvement recommendations
-node scripts/analyze-coverage.js
+# View detailed HTML coverage report
+open coverage/lcov-report/index.html
 
-# The coverage helper provides:
-# - Overall coverage percentages vs thresholds (80%)
-# - Files that need attention with specific line numbers
-# - Exact count of additional tests needed per file
-# - Uncovered line numbers for targeted test writing
+# Analyze LCOV report for specific uncovered lines
+grep -A 5 -B 5 "DA:.*,0" coverage/lcov.info
 ```
 
 ### Coverage-Driven Development Workflow
 1. **Run tests with coverage**: `pnpm run test:coverage`
-2. **Analyze results**: `node scripts/analyze-coverage.js`
+2. **Analyze results**: Review console output and HTML report
 3. **Focus on files below 80% threshold**
-4. **Target specific uncovered lines shown in analysis**
+4. **Target specific uncovered lines shown in reports**
 5. **Repeat until all thresholds met**
 
 ## Testing Approach
