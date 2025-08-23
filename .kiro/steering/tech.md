@@ -70,8 +70,11 @@ pnpm test
 # Run tests in watch mode
 pnpm run test:watch
 
-# Run tests with coverage reporting
+# Run tests with coverage reporting (REQUIRED)
 pnpm run test:coverage
+
+# Analyze coverage report and get actionable insights
+node scripts/analyze-coverage.js
 
 # Use MCP Inspector for interactive testing
 pnpx @modelcontextprotocol/inspector
@@ -110,6 +113,14 @@ pnpx @modelcontextprotocol/inspector
 - Session-based architecture with proper cleanup
 - Console logging includes session IDs for traceability
 
+### Test Coverage Best Practices
+- **Always run tests with coverage**: Use `pnpm run test:coverage` instead of `pnpm test`
+- **Analyze before writing**: Run `node scripts/analyze-coverage.js` to identify gaps
+- **Target specific lines**: Focus on uncovered lines shown in coverage analysis
+- **Maintain 80% threshold**: Lines, functions, branches, and statements must be ≥80%
+- **Test edge cases**: Ensure error paths and boundary conditions are covered
+- **Use coverage to guide refactoring**: High coverage enables safe code changes
+
 ### MCP Protocol Compatibility
 - **Zod Version Compatibility**: The MCP SDK requires Zod ^3.23.8, not Zod 4.x
 - **Schema Definition**: Use `z.string().url()` instead of `z.url()` for URL validation in Zod 3.x
@@ -132,23 +143,29 @@ pnpx @modelcontextprotocol/inspector
 - **LCOV Report**: `coverage/lcov.info` for CI/CD integration
 - **HTML Report**: `coverage/lcov-report/index.html` for browser viewing
 - **Console Output**: Real-time coverage summary during test runs
+- **Coverage Helper**: `scripts/analyze-coverage.js` provides actionable insights
 
-### Coverage Validation
+### Coverage Validation & Analysis
 ```bash
-# Check if coverage meets thresholds programmatically
-if [ -f "coverage/coverage-final.json" ]; then
-  echo "Coverage report available for analysis"
-  # Parse JSON for automated checks - structure includes:
-  # - Per-file coverage data with statement/branch/function maps
-  # - Line-by-line coverage tracking
-  # - Branch coverage analysis for conditional logic
-  # - Function coverage with execution counts
-fi
+# Always run tests with coverage for development
+pnpm run test:coverage
 
-# Example: Extract overall coverage percentage from JSON
-# The JSON contains detailed per-file coverage data that can be
-# programmatically analyzed for CI/CD pipeline integration
+# Analyze coverage and get specific improvement recommendations
+node scripts/analyze-coverage.js
+
+# The coverage helper provides:
+# - Overall coverage percentages vs thresholds (80%)
+# - Files that need attention with specific line numbers
+# - Exact count of additional tests needed per file
+# - Uncovered line numbers for targeted test writing
 ```
+
+### Coverage-Driven Development Workflow
+1. **Run tests with coverage**: `pnpm run test:coverage`
+2. **Analyze results**: `node scripts/analyze-coverage.js`
+3. **Focus on files below 80% threshold**
+4. **Target specific uncovered lines shown in analysis**
+5. **Repeat until all thresholds met**
 
 ## Testing Approach
 

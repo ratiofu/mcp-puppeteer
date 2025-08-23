@@ -7,4 +7,7 @@ export * from './test-setup.js';
 export * from './test-helpers.js';
 
 // Test web server
-export * from './test-web-server.js'
+export * from './test-web-server.js';
+
+// In-memory transport for testing
+export * from './test-transport.js';

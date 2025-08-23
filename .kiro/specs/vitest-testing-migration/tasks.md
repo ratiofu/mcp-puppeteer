@@ -26,7 +26,7 @@
   - Write proper server lifecycle management with cleanup
   - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
 
-- [ ] 3.3 Create in-memory transport for testing
+- [x] 3.3 Create in-memory transport for testing
   - Implement TestTransport class for bidirectional MCP communication
   - Add message routing between client and server instances
   - Ensure proper cleanup and resource management
