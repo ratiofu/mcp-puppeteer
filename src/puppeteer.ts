@@ -1,17 +1,51 @@
 import puppeteer, { type Browser } from "puppeteer-core";
+import { 
+  type BrowserConnectionConfig, 
+  type BrowserInitResult,
+  DEFAULT_CONFIG,
+  INTERNAL_ERROR_MESSAGES 
+} from './types/index.js';
 
-// Initialize browser connection
-export async function initBrowser(): Promise<Browser> {
+/**
+ * Initialize browser connection with proper error handling and typing
+ */
+export async function initBrowser(config?: Partial<BrowserConnectionConfig>): Promise<Browser> {
+  const connectionConfig: BrowserConnectionConfig = {
+    browserURL: config?.browserURL ?? DEFAULT_CONFIG.BROWSER_URL,
+    defaultViewport: config?.defaultViewport ?? null
+  };
+
   try {
-    return await puppeteer.connect({
-      browserURL: 'http://localhost:9222',
-      defaultViewport: null
-    });
-    console.log('Successfully connected to Chrome instance');
+    const browser = await puppeteer.connect(connectionConfig);
+    console.error('Successfully connected to Chrome instance');
+    return browser;
   } catch (error) {
-    console.error('Failed to connect to Chrome. Make sure Chrome is running with remote debugging enabled.');
-    console.error('Launch Chrome with: open -a "Google Chrome" --args --remote-debugging-port=9222');
-    console.error('Error details:', (error as Error).message);
+    console.error(INTERNAL_ERROR_MESSAGES.CHROME_CONNECTION_FAILED);
+    console.error(INTERNAL_ERROR_MESSAGES.CHROME_LAUNCH_INSTRUCTION);
+    console.error('Error details:', error instanceof Error ? error.message : String(error));
     process.exit(1);
+  }
+}
+
+/**
+ * Initialize browser connection with result object (useful for testing)
+ */
+export async function initBrowserSafe(config?: Partial<BrowserConnectionConfig>): Promise<BrowserInitResult> {
+  const connectionConfig: BrowserConnectionConfig = {
+    browserURL: config?.browserURL ?? DEFAULT_CONFIG.BROWSER_URL,
+    defaultViewport: config?.defaultViewport ?? null
+  };
+
+  try {
+    const browser = await puppeteer.connect(connectionConfig);
+    return {
+      success: true,
+      browser
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
+    };
   }
 }

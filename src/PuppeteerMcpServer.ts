@@ -1,6 +1,18 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type Browser, type Page } from "puppeteer-core";
 import { z } from "zod";
+import { 
+  ERROR_MESSAGES,
+  type NavigateRequest,
+  type NavigateResponse,
+  type ClickRequest,
+  type ClickResponse,
+  type ScreenshotResponse,
+  type GetHtmlResponse,
+  type GetConsoleRequest,
+  type GetConsoleResponse,
+  type ListTabUrlsResponse
+} from './types/index.js';
 
 export class PuppeteerMcpServer extends McpServer {
 
@@ -22,15 +34,22 @@ export class PuppeteerMcpServer extends McpServer {
       "navigate",
       "Navigate to a specific URL",
       { url: z.string().url().describe("URL to navigate to") },
-      async ({ url }) => {
-        if (!this.page) {
-          this.page = await this.browser.newPage();
-          this.setupConsoleListener();
-        }
-        await this.page.goto(url);
-        return {
-          content: [{ type: "text", text: `Navigated to ${url}` }],
-          isError: false
+      async ({ url }: NavigateRequest): Promise<NavigateResponse> => {
+        try {
+          if (!this.page) {
+            this.page = await this.browser.newPage();
+            this.setupConsoleListener();
+          }
+          await this.page.goto(url);
+          return {
+            content: [{ type: "text", text: `Navigated to ${url}` }],
+            isError: false
+          };
+        } catch (error) {
+          return {
+            content: [{ type: "text", text: `${ERROR_MESSAGES.NAVIGATION_FAILED}: ${error instanceof Error ? error.message : String(error)}` }],
+            isError: true
+          };
         }
       }
     )
@@ -39,11 +58,18 @@ export class PuppeteerMcpServer extends McpServer {
       "list_tab_urls",
       "List all URLs in the current browser session",
       {},
-      async () => {
-        const urls = (await this.browser.pages()).map(page => page.url());
-        return {
-          content: [{ type: "text", text: `Current tab URLs: ${urls.join(", ")}` }],
-          isError: false
+      async (): Promise<ListTabUrlsResponse> => {
+        try {
+          const urls = (await this.browser.pages()).map(page => page.url());
+          return {
+            content: [{ type: "text", text: `Current tab URLs: ${urls.join(", ")}` }],
+            isError: false
+          };
+        } catch (error) {
+          return {
+            content: [{ type: "text", text: `Failed to list tab URLs: ${error instanceof Error ? error.message : String(error)}` }],
+            isError: true
+          };
         }
       }
     )
@@ -52,17 +78,24 @@ export class PuppeteerMcpServer extends McpServer {
       "click",
       "Click on an element",
       { selector: z.string().describe("CSS selector of the element to click") },
-      async ({ selector }) => {
+      async ({ selector }: ClickRequest): Promise<ClickResponse> => {
         if (!this.page) {
           return {
-            content: [{ type: "text", text: "no current page to click" }],
+            content: [{ type: "text", text: ERROR_MESSAGES.NO_PAGE_TO_CLICK }],
             isError: true
-          }
+          };
         }
-        await this.page.click(selector);
-        return {
-          content: [{ type: "text", text: `Clicked on ${selector}` }],
-          isError: false
+        try {
+          await this.page.click(selector);
+          return {
+            content: [{ type: "text", text: `Clicked on ${selector}` }],
+            isError: false
+          };
+        } catch (error) {
+          return {
+            content: [{ type: "text", text: `${ERROR_MESSAGES.CLICK_FAILED}: ${error instanceof Error ? error.message : String(error)}` }],
+            isError: true
+          };
         }
       }
     )
@@ -71,17 +104,24 @@ export class PuppeteerMcpServer extends McpServer {
       "take_screenshot",
       "Take a screenshot of the current page",
       {},
-      async () => {
+      async (): Promise<ScreenshotResponse> => {
         if (!this.page) {
           return {
-            content: [{ type: "text", text: "no current page to screenshot" }],
+            content: [{ type: "text", text: ERROR_MESSAGES.NO_PAGE_TO_SCREENSHOT }],
             isError: true
-          }
+          };
         }
-        const buffer = await this.page.screenshot();
-        return {
-          content: [{ type: "image", data: Buffer.from(buffer).toString('base64'), mimeType: "image/png" }],
-          isError: false
+        try {
+          const buffer = await this.page.screenshot();
+          return {
+            content: [{ type: "image", data: Buffer.from(buffer).toString('base64'), mimeType: "image/png" }],
+            isError: false
+          };
+        } catch (error) {
+          return {
+            content: [{ type: "text", text: `${ERROR_MESSAGES.SCREENSHOT_FAILED}: ${error instanceof Error ? error.message : String(error)}` }],
+            isError: true
+          };
         }
       }
     )
@@ -90,17 +130,24 @@ export class PuppeteerMcpServer extends McpServer {
       "get_html",
       "Extract the current page's entire HTML",
       {},
-      async () => {
+      async (): Promise<GetHtmlResponse> => {
         if (!this.page) {
           return {
-            content: [{ type: "text", text: "no current page to extract HTML from" }],
+            content: [{ type: "text", text: ERROR_MESSAGES.NO_PAGE_TO_EXTRACT_HTML }],
             isError: true
-          }
+          };
         }
-        const html = await this.page.content();
-        return {
-          content: [{ type: "text", text: html }],
-          isError: false
+        try {
+          const html = await this.page.content();
+          return {
+            content: [{ type: "text", text: html }],
+            isError: false
+          };
+        } catch (error) {
+          return {
+            content: [{ type: "text", text: `${ERROR_MESSAGES.HTML_EXTRACTION_FAILED}: ${error instanceof Error ? error.message : String(error)}` }],
+            isError: true
+          };
         }
       }
     )
@@ -109,23 +156,30 @@ export class PuppeteerMcpServer extends McpServer {
       "get_console",
       "Get the current console output",
       { clear: z.boolean().describe("Whether to clear the console after getting the output").default(false) },
-      async ({ clear }) => {
+      async ({ clear }: GetConsoleRequest): Promise<GetConsoleResponse> => {
         if (!this.page) {
           return {
-            content: [{ type: "text", text: "no current page with console output" }],
+            content: [{ type: "text", text: ERROR_MESSAGES.NO_PAGE_WITH_CONSOLE }],
             isError: true
+          };
+        }
+
+        try {
+          const output = this.consoleLogs.join('\n');
+
+          if (clear) {
+            this.consoleLogs = [];
           }
-        }
 
-        const output = this.consoleLogs.join('\n');
-
-        if (clear) {
-          this.consoleLogs = [];
-        }
-
-        return {
-          content: [{ type: "text", text: output.length > 0 ? output : "No console output available" }],
-          isError: false
+          return {
+            content: [{ type: "text", text: output.length > 0 ? output : "No console output available" }],
+            isError: false
+          };
+        } catch (error) {
+          return {
+            content: [{ type: "text", text: `${ERROR_MESSAGES.CONSOLE_RETRIEVAL_FAILED}: ${error instanceof Error ? error.message : String(error)}` }],
+            isError: true
+          };
         }
       }
     )

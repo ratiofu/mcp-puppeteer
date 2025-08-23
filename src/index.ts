@@ -1,11 +1,47 @@
 import { initBrowser } from './puppeteer.js';
 import { PuppeteerMcpServer } from './PuppeteerMcpServer.js';
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { 
+  type ServerConfig, 
+  type ServerLifecycleEvents,
+  type ProcessSignal,
+  DEFAULT_CONFIG,
+  INTERNAL_ERROR_MESSAGES 
+} from './types/index.js';
 
-const sessionId = "pipe-session";
+/**
+ * Default server configuration
+ */
+const defaultConfig: ServerConfig = {
+  sessionId: DEFAULT_CONFIG.SESSION_ID,
+  chromeDebugPort: DEFAULT_CONFIG.CHROME_DEBUG_PORT
+};
 
-// Initialize and start pipe transport server
-async function main() {
+/**
+ * Setup graceful shutdown handlers for the server
+ */
+function setupShutdownHandlers(
+  server: PuppeteerMcpServer, 
+  events?: ServerLifecycleEvents
+): void {
+  const handleShutdown = async (signal: ProcessSignal) => {
+    console.error(`Received ${signal}, cleaning up...`);
+    events?.onShutdown?.(signal);
+    await server.disconnect();
+    process.exit(0);
+  };
+
+  process.on('SIGINT', () => handleShutdown('SIGINT'));
+  process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+}
+
+/**
+ * Initialize and start the MCP server with pipe transport
+ */
+async function startServer(
+  config: ServerConfig = defaultConfig, 
+  events?: ServerLifecycleEvents
+): Promise<void> {
   try {
     // Initialize browser
     console.error('Connecting to Chrome...');
@@ -14,24 +50,15 @@ async function main() {
 
     // Create transport and server
     const transport = new StdioServerTransport();
-    const server = new PuppeteerMcpServer(sessionId, browser);
+    const server = new PuppeteerMcpServer(config.sessionId, browser);
 
-    // Handle process termination gracefully
-    process.on('SIGINT', async () => {
-      console.error('Received SIGINT, cleaning up...');
-      await server.disconnect();
-      process.exit(0);
-    });
-
-    process.on('SIGTERM', async () => {
-      console.error('Received SIGTERM, cleaning up...');
-      await server.disconnect();
-      process.exit(0);
-    });
+    // Setup graceful shutdown
+    setupShutdownHandlers(server, events);
 
     // Handle transport close
     transport.onclose = async () => {
       console.error('Transport closed, cleaning up...');
+      events?.onTransportClose?.();
       await server.disconnect();
       process.exit(0);
     };
@@ -39,14 +66,28 @@ async function main() {
     // Connect transport and server
     await server.connect(transport);
     console.error('MCP server started with pipe transport');
+    events?.onStart?.(config.sessionId);
 
   } catch (error) {
-    console.error('Error starting server:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`${INTERNAL_ERROR_MESSAGES.SERVER_STARTUP_FAILED}:`, errorMessage);
+    events?.onError?.(error instanceof Error ? error : new Error(errorMessage));
     process.exit(1);
   }
 }
 
+/**
+ * Main entry point
+ */
+async function main(): Promise<void> {
+  await startServer();
+}
+
+// Start the server
 main().catch((error) => {
-  console.error('Unhandled error:', error);
+  console.error(`${INTERNAL_ERROR_MESSAGES.UNHANDLED_ERROR}:`, error);
   process.exit(1);
 });
+
+// Export for testing
+export { startServer, setupShutdownHandlers, defaultConfig };
