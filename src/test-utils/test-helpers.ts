@@ -15,6 +15,7 @@ import { createTestPage } from './test-setup.js';
  */
 export async function createTestPageWithContent(html: string, testName?: string): Promise<Page> {
   const page = await createTestPage(testName);
+  await setupConsoleLogging(page);
   const dataUrl = `data:text/html,${encodeURIComponent(html)}`;
   await page.goto(dataUrl);
   return page;
@@ -87,8 +88,8 @@ export async function getCurrentUrl(page: Page): Promise<string> {
  * @returns Promise<string> Base64 encoded PNG image
  */
 export async function takeScreenshotBase64(page: Page, options?: { fullPage?: boolean }): Promise<string> {
-  const screenshot = await page.screenshot({ 
-    type: 'png', 
+  const screenshot = await page.screenshot({
+    type: 'png',
     encoding: 'base64',
     fullPage: options?.fullPage ?? false
   });
@@ -107,29 +108,62 @@ export async function executeScript<T = any>(page: Page, script: string): Promis
 }
 
 /**
- * Clear console logs on the page
+ * Clear console logs on the page (both browser console and our captured logs)
  * 
  * @param page The page to clear console on
  * @returns Promise<void>
  */
 export async function clearConsole(page: Page): Promise<void> {
   await page.evaluate(() => console.clear());
+  await clearConsoleLogsForPage(page);
+}
+
+/**
+ * Console log storage for pages
+ * Maps page instances to their console logs
+ */
+const pageConsoleLogs = new WeakMap<Page, string[]>();
+
+/**
+ * Set up console logging for a page
+ * This should be called after creating a page to capture console output
+ * 
+ * @param page The page to set up console logging for
+ * @returns Promise<void>
+ */
+export async function setupConsoleLogging(page: Page): Promise<void> {
+  const logs: string[] = [];
+  pageConsoleLogs.set(page, logs);
+
+  page.on('console', message => {
+    const text = `[${message.type()}] ${message.text()}`;
+    logs.push(text);
+  });
 }
 
 /**
  * Get console logs from the page
- * Note: This requires setting up console listeners before the logs are generated
+ * Note: This requires calling setupConsoleLogging() first
  * 
  * @param page The page to get console logs from
  * @returns Promise<string[]> Array of console log messages
  */
 export async function getConsoleLogs(page: Page): Promise<string[]> {
-  // This is a simplified version - in practice, you'd need to set up listeners
-  // The actual implementation would depend on how console logging is handled
-  return await page.evaluate(() => {
-    // This is a placeholder - actual implementation would need proper console capture
-    return [];
-  });
+  const logs = pageConsoleLogs.get(page);
+  return logs ? [...logs] : [];
+}
+
+/**
+ * Clear console logs for a page
+ * 
+ * @param page The page to clear console logs for
+ * @returns Promise<void>
+ */
+export async function clearConsoleLogsForPage(page: Page): Promise<void> {
+  const logs = pageConsoleLogs.get(page);
+  if (logs) {
+    logs.length = 0;
+  }
 }
 
 /**

@@ -9,7 +9,9 @@ import {
   takeScreenshotBase64,
   executeScript,
   safeClosePage,
-  createTestHtml
+  createTestHtml,
+  getConsoleLogs,
+  clearConsole
 } from '../test-helpers.js';
 
 describe('Test Helpers', () => {
@@ -126,6 +128,72 @@ describe('Test Helpers', () => {
       expect(html).toContain('<script>');
       expect(html).toContain('console.log');
       expect(html).toContain('function testClick()');
+    });
+  });
+
+  describe('console logging', () => {
+    it('should capture console logs from page', async () => {
+      const page = await createTestPageWithContent(createTestHtml('Console Test', true));
+      
+      // Wait a moment for the page to load and console.log to execute
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const logs = await getConsoleLogs(page);
+      expect(logs.length).toBeGreaterThan(0);
+      expect(logs.some(log => log.includes('Page loaded: Console Test'))).toBe(true);
+      
+      await safeClosePage(page);
+    });
+
+    it('should capture different types of console messages', async () => {
+      const page = await createTestPageWithContent(createTestHtml('Console Test', true));
+      
+      // Wait for initial page load
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Trigger different console messages
+      await page.click('#error-button');
+      await page.click('#warn-button');
+      
+      // Wait for console messages to be captured
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const logs = await getConsoleLogs(page);
+      expect(logs.some(log => log.includes('[log] Page loaded'))).toBe(true);
+      expect(logs.some(log => log.includes('[error] Test error message'))).toBe(true);
+      expect(logs.some(log => log.includes('[warn] Test warning message'))).toBe(true);
+      
+      await safeClosePage(page);
+    });
+
+    it('should clear console logs', async () => {
+      const page = await createTestPageWithContent(createTestHtml('Console Test', true));
+      
+      // Wait for initial logs
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      let logs = await getConsoleLogs(page);
+      expect(logs.length).toBeGreaterThan(0);
+      
+      await clearConsole(page);
+      logs = await getConsoleLogs(page);
+      expect(logs.length).toBe(0);
+      
+      await safeClosePage(page);
+    });
+
+    it('should work with createTestPageWithContent for console logging', async () => {
+      const html = createTestHtml('Helper Test', true);
+      const page = await createTestPageWithContent(html, 'Console Helper Test');
+      
+      // Wait for console logs
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const logs = await getConsoleLogs(page);
+      expect(logs.length).toBeGreaterThan(0);
+      expect(logs.some(log => log.includes('Page loaded: Helper Test'))).toBe(true);
+      
+      await safeClosePage(page);
     });
   });
 
