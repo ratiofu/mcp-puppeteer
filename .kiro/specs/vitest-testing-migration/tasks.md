@@ -50,43 +50,43 @@
   - Run tests one more time
   - Ensure design spec is aligned with the code (code is the source of truth)
 
-- [ ] 4. Implement individual tool tests
-- [ ] 4.1 Create navigate tool tests
+- [x] 4. Implement individual tool tests
+- [x] 4.1 Create navigate tool tests
   - Write tests for valid URL navigation with local test server
   - Test error handling for invalid URLs and network failures
   - Verify response format matches NavigateResponse interface
   - Test navigation to different page types (HTML, redirects)
   - _Requirements: 4.1, 8.1, 8.2, 9.1_
 
-- [ ] 4.2 Create click tool tests
+- [x] 4.2 Create click tool tests
   - Write tests for clicking elements using CSS selectors
   - Test error handling when no page is available
   - Test clicking on different element types (buttons, links, inputs)
   - Verify error responses for invalid selectors
   - _Requirements: 4.3, 8.1, 8.2_
 
-- [ ] 4.3 Create screenshot tool tests
+- [x] 4.3 Create screenshot tool tests
   - Write tests for screenshot capture and base64 encoding
   - Test error handling when no page is available
   - Verify image format and MIME type correctness
   - Test screenshots of different page states and sizes
   - _Requirements: 4.4, 8.1_
 
-- [ ] 4.4 Create HTML extraction tool tests
+- [x] 4.4 Create HTML extraction tool tests
   - Write tests for HTML content extraction from test pages
   - Test error handling when no page is available
   - Verify complete HTML content retrieval including dynamic content
   - Test HTML extraction from different page types
   - _Requirements: 4.5, 8.1_
 
-- [ ] 4.5 Create console tool tests
+- [x] 4.5 Create console tool tests
   - Write tests for console output capture using test pages with JavaScript
   - Test console clearing functionality with clear parameter
   - Test error handling when no page is available
   - Verify console output from different JavaScript execution contexts
   - _Requirements: 4.6, 8.1, 9.1_
 
-- [ ] 4.6 Create list tab URLs tool tests
+- [x] 4.6 Create list tab URLs tool tests
   - Write tests for tab URL listing functionality
   - Test with multiple tabs open in the same browser instance
   - Verify URL format and completeness in responses

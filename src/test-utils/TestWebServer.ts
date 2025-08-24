@@ -38,28 +38,26 @@ export class TestWebServer {
     });
   }
 
-  addResource(resource: TestResource): Promise<void> {
-    this.resources.set(resource.path, resource);
-    // Auto-start server when first resource is added
+  private async autoStart() {
     if (!this.isRunning) {
-      return this.start().then(() => {}).catch(error => {
+      try {
+        await this.start();
+      } catch (error) {
         console.error('Failed to auto-start test web server:', error);
         throw error;
-      });
+      }
     }
-    return Promise.resolve();
   }
 
-  addResources(resources: TestResource[]): Promise<void> {
+  async addResource(resource: TestResource) {
+    this.resources.set(resource.path, resource);
+    await this.autoStart()
+  }
+
+  async addResources(resources: TestResource[]) {
     resources.forEach(resource => this.resources.set(resource.path, resource));
-    // Auto-start server when resources are added
-    if (!this.isRunning && resources.length > 0) {
-      return this.start().then(() => {}).catch(error => {
-        console.error('Failed to auto-start test web server:', error);
-        throw error;
-      });
-    }
-    return Promise.resolve();
+    await this.autoStart()
+
   }
 
   getUrl(path: string = '/'): string {
