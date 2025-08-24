@@ -1,7 +1,7 @@
 import { Browser } from 'puppeteer-core';
 import { PuppeteerMcpServer } from '../PuppeteerMcpServer.js';
-import { McpTestClient } from './mcp-test-client.js';
-import { TestWebServer } from './test-web-server.js';
+import { McpTestClient } from './McpTestClient.js';
+import { TestWebServer } from './TestWebServer.js';
 import { getTestBrowser } from './test-setup.js';
 
 /**

@@ -42,7 +42,7 @@ Client → stdin/stdout → StdioServerTransport → PuppeteerMcpServer → Brow
 - No changes required - already compatible with any transport
 - Session management simplified to single session per process
 
-#### `src/puppeteer.ts`
+#### `src/initBrowser.ts`
 - No changes required - browser initialization remains the same
 
 #### `src/cli.ts`

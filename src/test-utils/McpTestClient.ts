@@ -1,7 +1,7 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { Browser } from 'puppeteer-core';
 import { PuppeteerMcpServer } from '../PuppeteerMcpServer.js';
-import { TestTransport, createTransportPair } from './test-transport.js';
+import { TestTransport, createTransportPair } from './TestTransport.js';
 import { 
   type ToolName,
   type ToolRequestMap,

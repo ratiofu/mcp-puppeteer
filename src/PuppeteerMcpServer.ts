@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type Browser, type Page } from "puppeteer-core";
 import { z } from "zod";
-import { 
+import {
   ERROR_MESSAGES,
   type NavigateRequest,
   type NavigateResponse,

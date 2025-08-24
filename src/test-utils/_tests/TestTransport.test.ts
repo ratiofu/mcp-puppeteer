@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { TestTransport, createTransportPair } from '../test-transport.js';
+import { TestTransport, createTransportPair } from '../TestTransport.js';
 import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 
 /**

@@ -1,4 +1,4 @@
-import { initBrowser } from './puppeteer.js';
+import { initBrowser } from './initBrowser.js';
 import { PuppeteerMcpServer } from './PuppeteerMcpServer.js';
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { 

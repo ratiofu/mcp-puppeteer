@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { 
   withTestContext,
   type TestContext 
-} from '../test-context-factory.js';
+} from '../TestContext.js';
 import { setupTests, teardownTests } from '../test-setup.js';
 
 describe('Test Context Factory', () => {

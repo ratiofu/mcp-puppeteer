@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { interactiveHtml, page2Html } from '../test-fixtures.js';
-import { withTestContext } from '../test-context-factory.js';
+import { withTestContext } from '../TestContext.js';
 import { setupTests, teardownTests } from '../test-setup.js';
 
 describe('Test Fixtures', () => {

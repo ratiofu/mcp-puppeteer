@@ -21,7 +21,7 @@
 ## Source Code Organization (`src/`)
 - **`index.ts`** - Main entry point, pipe transport server setup, session management
 - **`PuppeteerMcpServer.ts`** - Core MCP server implementation with browser tools
-- **`puppeteer.ts`** - Browser initialization and connection logic
+- **`initBrowser.ts`** - Browser initialization and connection logic
 
 ## Build Output (`dist/`)
 - **`index.js`** - Single bundled and minified JavaScript file (ESM, Node.js 22+)
@@ -37,10 +37,13 @@
 
 ## Code Organization Patterns
 
-### File Naming
-- Use PascalCase for class files (`PuppeteerMcpServer.ts`)
-- Use camelCase for utility files (`puppeteer.ts`, `index.ts`)
-- Include `.ts` extensions in imports (required for ESNext modules)
+### File Naming Style Guide
+- **Primary Export Rule**: TypeScript files must be named after their primary export
+- **Class Files**: Use PascalCase matching the class name (`PuppeteerMcpServer.ts` exports `PuppeteerMcpServer`)
+- **Function Files**: Use camelCase matching the primary function (`initBrowser.ts` exports `initBrowser`)
+- **Index Files**: Use `index.ts` for re-export files and main entry points
+- **Multi-export Files**: Use descriptive names for files with multiple related exports (e.g., `test-helpers.ts`)
+- **Import Extensions**: Include `.ts` extensions in imports (required for ESNext modules)
 
 ### Module Structure
 - Each file should have a single primary export
@@ -64,7 +67,7 @@
 
 ## Extension Points
 - Add new MCP tools in `PuppeteerMcpServer.ts`
-- Modify browser initialization in `src/puppeteer.ts`
+- Modify browser initialization in `src/initBrowser.ts`
 - Extend transport options in `src/index.ts`
 - Add additional functionality in `src/index.ts`
 

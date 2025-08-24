@@ -7,16 +7,16 @@ export * from './test-setup.js';
 export * from './test-helpers.js';
 
 // Test web server
-export * from './test-web-server.js';
+export * from './TestWebServer.js';
 
 // In-memory transport for testing
-export * from './test-transport.js';
+export * from './TestTransport.js';
 
 // MCP test client wrapper
-export * from './mcp-test-client.js';
+export * from './McpTestClient.js';
 
 // Test context factory and utilities
-export * from './test-context-factory.js';
+export * from './TestContext.js';
 
 // Test fixtures for reusable HTML content
 export * from './test-fixtures.js';

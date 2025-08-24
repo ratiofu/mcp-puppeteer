@@ -58,7 +58,7 @@ export default defineConfig({
 
 ```typescript
 import { Browser } from 'puppeteer-core';
-import { initBrowser } from '../puppeteer.js';
+import { initBrowser } from '../initBrowser.js';
 
 let sharedBrowser: Browser | null = null;
 
@@ -77,7 +77,7 @@ export async function cleanupTestBrowser(): Promise<void> {
 }
 ```
 
-### 3. MCP Test Client Wrapper (`src/test-utils/mcp-test-client.ts`)
+### 3. MCP Test Client Wrapper (`src/test-utils/McpTestClient.ts`)
 
 ```typescript
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -120,7 +120,7 @@ export class McpTestClient {
 }
 ```
 
-### 4. Local Test Web Server (`src/test-utils/test-web-server.ts`)
+### 4. Local Test Web Server (`src/test-utils/TestWebServer.ts`)
 
 ```typescript
 import { createServer, IncomingMessage, ServerResponse } from 'http';
@@ -206,7 +206,7 @@ export class TestWebServer {
 }
 ```
 
-### 5. In-Memory Transport for Testing (`src/test-utils/test-transport.ts`)
+### 5. In-Memory Transport for Testing (`src/test-utils/TestTransport.ts`)
 
 ```typescript
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
@@ -335,7 +335,7 @@ export type ToolRequest = NavigateRequest | ClickRequest | GetConsoleRequest;
 export type ToolResponse = NavigateResponse | ClickResponse | ScreenshotResponse | GetHtmlResponse | GetConsoleResponse | ListTabUrlsResponse;
 ```
 
-### 7. Test Context Factory (`src/test-utils/test-context-factory.ts`)
+### 7. Test Context Factory (`src/test-utils/TestContext.ts`)
 
 ```typescript
 export interface TestContextConfig {
@@ -519,6 +519,39 @@ await withTestContext('button-interaction-test', async (context) => {
 });
 ```
 
+## File Naming Style Guide
+
+This project follows a consistent file naming convention where TypeScript files are named after their primary export:
+
+### Style Guide Rules
+
+- **Primary Export Rule**: TypeScript files must be named after their primary export
+- **Class Files**: Use PascalCase matching the class name (`PuppeteerMcpServer.ts` exports `PuppeteerMcpServer`)
+- **Function Files**: Use camelCase matching the primary function (`initBrowser.ts` exports `initBrowser`)
+- **Index Files**: Use `index.ts` for re-export files and main entry points
+- **Multi-export Files**: Use descriptive names for files with multiple related exports (e.g., `test-helpers.ts`)
+- **Test Files**: Named after the class/module they test (e.g., `McpTestClient.test.ts` tests `McpTestClient`)
+- **Import Extensions**: Include `.ts` extensions in imports (required for ESNext modules)
+
+### Examples
+
+```typescript
+// ✅ Correct naming
+src/PuppeteerMcpServer.ts     // exports class PuppeteerMcpServer
+src/initBrowser.ts            // exports function initBrowser
+src/test-utils/McpTestClient.ts // exports class McpTestClient
+src/test-utils/TestContext.ts   // exports class TestContext
+
+// ✅ Appropriate descriptive names
+src/test-utils/test-helpers.ts  // multiple utility functions
+src/test-utils/test-fixtures.ts // multiple constants/fixtures
+src/types/api.ts               // multiple related API types
+
+// ✅ Test file naming
+src/test-utils/_tests/McpTestClient.test.ts    // tests McpTestClient class
+src/test-utils/_tests/TestContext.test.ts     // tests TestContext class
+```
+
 ## Data Models
 
 ### Test Suite Structure
@@ -542,14 +575,27 @@ src/
 │       ├── console.test.ts         # Console tool tests
 │       └── list-tabs.test.ts       # Tab listing tests
 ├── test-utils/
-│   ├── mcp-test-client.ts          # MCP client wrapper
-│   ├── test-transport.ts           # In-memory transport
-│   ├── test-web-server.ts          # Local web server for tests
-│   ├── test-context-factory.ts     # Test context factory for tests
-│   ├── test-setup.ts               # Global test setup
-│   └── test-helpers.ts             # Common test utilities
+│   ├── McpTestClient.ts            # MCP client wrapper (class McpTestClient)
+│   ├── TestTransport.ts            # In-memory transport (class TestTransport)
+│   ├── TestWebServer.ts            # Local web server (class TestWebServer)
+│   ├── TestContext.ts              # Test context factory (class TestContext)
+│   ├── test-setup.ts               # Global test setup utilities
+│   ├── test-helpers.ts             # Common test helper functions
+│   ├── test-fixtures.ts            # Reusable HTML fixtures and test data
+│   ├── vitest-setup.ts             # Vitest global setup configuration
+│   └── _tests/                     # Test files for test utilities
+│       ├── McpTestClient.test.ts   # Tests for McpTestClient class
+│       ├── TestContext.test.ts     # Tests for TestContext class
+│       ├── TestTransport.test.ts   # Tests for TestTransport class
+│       ├── TestWebServer.test.ts   # Tests for TestWebServer class
+│       ├── test-fixtures.test.ts   # Tests for test fixtures
+│       ├── test-helpers.test.ts    # Tests for test helper functions
+│       ├── test-setup-core.test.ts # Core test setup functionality tests
+│       └── test-setup-lifecycle.test.ts # Test setup lifecycle tests
 └── types/
-    └── api.ts                      # Public API type definitions
+    ├── api.ts                      # Public API type definitions
+    ├── internal.ts                 # Internal type definitions
+    └── index.ts                    # Type re-exports
 ```
 
 ### Test Data Models

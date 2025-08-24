@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Browser } from 'puppeteer-core';
-import { McpTestClient, createMcpTestClient } from '../mcp-test-client.js';
+import { McpTestClient, createMcpTestClient } from '../McpTestClient.js';
 import { getTestBrowser } from '../test-setup.js';
 import { TOOL_NAMES } from '../../types/api.js';
 
