@@ -1,6 +1,7 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { errorToString } from '../utils/error.js';
 
 export interface TestResource {
   path: string;
@@ -94,7 +95,7 @@ export class TestWebServer {
       res.end(body);
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'text/plain' });
-      res.end(`Internal Server Error: ${error instanceof Error ? error.message : String(error)}`);
+      res.end(`Internal Server Error: ${errorToString(error)}`);
     }
   }
 

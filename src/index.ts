@@ -1,4 +1,5 @@
 import { initBrowser } from './initBrowser.js';
+import { errorToString } from './utils/error.js';
 import { PuppeteerMcpServer } from './PuppeteerMcpServer.js';
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { 
@@ -69,7 +70,7 @@ async function startServer(
     events?.onStart?.(config.sessionId);
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorMessage = errorToString(error);
     console.error(`${INTERNAL_ERROR_MESSAGES.SERVER_STARTUP_FAILED}:`, errorMessage);
     events?.onError?.(error instanceof Error ? error : new Error(errorMessage));
     process.exit(1);
@@ -85,7 +86,7 @@ async function main(): Promise<void> {
 
 // Start the server
 main().catch((error) => {
-  console.error(`${INTERNAL_ERROR_MESSAGES.UNHANDLED_ERROR}:`, error);
+  console.error(`${INTERNAL_ERROR_MESSAGES.UNHANDLED_ERROR}:`, errorToString(error));
   process.exit(1);
 });
 

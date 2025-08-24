@@ -3,6 +3,7 @@ import { PuppeteerMcpServer } from '../PuppeteerMcpServer.js';
 import { McpTestClient } from './McpTestClient.js';
 import { TestWebServer } from './TestWebServer.js';
 import { getTestBrowser } from './test-setup.js';
+import { errorToString } from '../utils/error.js';
 
 /**
  * Configuration options for creating a test context instance
@@ -75,28 +76,27 @@ export class TestContext {
      * Cleanup function to call when test is complete
      */
     async cleanup(): Promise<void> {
-        const cleanupErrors: Error[] = [];
+        const cleanupErrors: string[] = [];
 
-        // Stop web server if it was initialized
+        // Disconnect client first to release any active browser connections to the web server
+        try {
+            await this._client.disconnect();
+        } catch (error) {
+            cleanupErrors.push(`Client disconnect failed: ${errorToString(error)}`);
+        }
+
+        // Stop web server if it was initialized (after browser/page closed)
         if (this._webServer) {
             try {
                 await this._webServer.stop();
             } catch (error) {
-                cleanupErrors.push(new Error(`Web server cleanup failed: ${error instanceof Error ? error.message : String(error)}`));
+                cleanupErrors.push(`Web server cleanup failed: ${errorToString(error)}`);
             }
         }
 
-        // Disconnect client
-        try {
-            await this._client.disconnect();
-        } catch (error) {
-            cleanupErrors.push(new Error(`Client disconnect failed: ${error instanceof Error ? error.message : String(error)}`));
-        }
-
-        // If there were cleanup errors, throw a combined error
+        // Log cleanup errors without throwing to avoid masking test results
         if (cleanupErrors.length > 0) {
-            const errorMessage = cleanupErrors.map(e => e.message).join('; ');
-            throw new Error(`Test cleanup failed: ${errorMessage}`);
+            console.error(`Test cleanup encountered issues: ${cleanupErrors.join('; ')}`);
         }
     }
 }

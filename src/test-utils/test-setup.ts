@@ -1,16 +1,21 @@
 import { Browser } from 'puppeteer-core';
 import puppeteer from 'puppeteer-core';
+import { errorToString } from '../utils/error.js';
 
 /**
- * Shared browser instance for all tests
- * Using a single browser instance improves test performance and reduces resource usage
+ * Per-file browser instance for tests
+ * Each test file gets its own browser instance to support parallel execution
  */
+// Shared browser per Vitest worker
 let sharedBrowser: Browser | null = null;
 
 /**
  * Track whether we launched the browser ourselves (for cleanup purposes)
  */
-let browserLaunchedByTests = false;
+// Track whether we launched the shared browser
+let sharedLaunched = false;
+
+
 
 /**
  * Check if tests should show the browser (not headless)
@@ -40,8 +45,8 @@ function findChromiumExecutable(): string {
         console.log(`Found browser executable: ${result}`);
         return result;
       }
-    } catch {
-      // Command failed, try next one
+    } catch (err) {
+      console.warn(`findChromiumExecutable: probe failed for command '${command}': ${errorToString(err)}`);
       continue;
     }
   }
@@ -56,7 +61,8 @@ function findChromiumExecutable(): string {
       execSync(`test -f "${path}"`, { stdio: 'pipe' });
       console.log(`Found browser executable: ${path}`);
       return path;
-    } catch {
+    } catch (err) {
+      console.warn(`findChromiumExecutable: path probe failed for '${path}': ${errorToString(err)}`);
       continue;
     }
   }
@@ -97,44 +103,35 @@ async function launchTestBrowser(): Promise<Browser> {
       ]
     });
 
-    browserLaunchedByTests = true;
     return browser;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to launch test browser: ${errorMessage}`);
+    throw new Error(`Failed to launch test browser: ${errorToString(error)}`);
   }
 }
 
 /**
- * Get or create the shared browser instance for testing
- * This function ensures only one browser instance is created across all tests
+ * Get or create the per-file browser instance for testing
+ * This function ensures only one browser instance is created per test file
  * 
- * @returns Promise<Browser> The shared browser instance
+ * @returns Promise<Browser> The file-specific browser instance
  * @throws Error if browser connection fails
  */
 export async function getTestBrowser(): Promise<Browser> {
   if (!sharedBrowser) {
-    console.log('Initializing shared browser instance for tests...');
-
-    // Always launch our own Chromium instance for tests to avoid interfering with user's browser
-    console.log('Launching dedicated Chromium instance for tests...');
+    // Always launch our own Chromium instance for tests
     sharedBrowser = await launchTestBrowser();
-
-    // Set up cleanup handler for unexpected browser disconnection
+    sharedLaunched = true;
+    // Handle unexpected disconnects quietly
     sharedBrowser.on('disconnected', () => {
-      console.warn('Test browser disconnected unexpectedly');
       sharedBrowser = null;
-      browserLaunchedByTests = false;
+      sharedLaunched = false;
     });
-
-    console.log('Shared browser instance initialized successfully');
   }
-
   return sharedBrowser;
 }
 
 /**
- * Check if the shared browser instance is available and connected
+ * Check if the file browser instance is available and connected
  * 
  * @returns boolean True if browser is available and connected
  */
@@ -143,40 +140,45 @@ export function isTestBrowserAvailable(): boolean {
 }
 
 /**
- * Clean up the shared browser instance
+ * Clean up the file browser instance
  * This should be called during test teardown to ensure proper resource cleanup
  * 
  * @returns Promise<void>
  */
 export async function cleanupTestBrowser(): Promise<void> {
-  if (sharedBrowser) {
-    try {
-      console.log('Cleaning up shared browser instance...');
-
-      // Close all pages first to ensure clean shutdown
-      const pages = await sharedBrowser.pages();
-      await Promise.all(pages.map(page => page.close().catch(err => {
-        console.warn('Failed to close page during cleanup:', err.message);
-      })));
-
-      if (browserLaunchedByTests) {
-        // If we launched the browser ourselves, close it completely
-        console.log('Closing browser launched by tests...');
-        await sharedBrowser.close();
-      } else {
-        // If we connected to an existing browser, just disconnect
-        console.log('Disconnecting from existing browser instance...');
-        await sharedBrowser.disconnect();
-      }
-
-      console.log('Shared browser instance cleaned up successfully');
-    } catch (error) {
-      console.error('Error during browser cleanup:', error instanceof Error ? error.message : String(error));
-    } finally {
-      sharedBrowser = null;
-      browserLaunchedByTests = false;
+  if (!sharedBrowser) return;
+  try {
+    // Close all pages for a clean state, then close the browser
+    const pages = await sharedBrowser.pages();
+    const closeErrors: string[] = [];
+    await Promise.all(
+      pages.map(async (p, idx) => {
+        try {
+          await p.close();
+        } catch (err) {
+          closeErrors.push(`page#${idx}: ${errorToString(err)}`);
+        }
+      })
+    );
+    if (closeErrors.length > 0) {
+      const preview = closeErrors.slice(0, 5).join(' | ');
+      console.warn(`cleanupTestBrowser: failed to close ${closeErrors.length} page(s). First errors: ${preview}`);
     }
+    await sharedBrowser.close();
+  } catch (err) {
+    console.warn('cleanupTestBrowser: error during browser close:', errorToString(err));
+  } finally {
+    sharedBrowser = null;
+    sharedLaunched = false;
   }
+}
+
+/**
+ * Create an isolated, ephemeral browser dedicated to a single test.
+ * Call `close()` on the returned instance when done.
+ */
+export async function createEphemeralBrowser(): Promise<Browser> {
+  return await launchTestBrowser();
 }
 
 /**
@@ -200,8 +202,7 @@ export async function createTestPage(testName?: string) {
 
     return page;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to create test page${testName ? ` for ${testName}` : ''}: ${errorMessage}`);
+    throw new Error(`Failed to create test page${testName ? ` for ${testName}` : ''}: ${errorToString(error)}`);
   }
 }
 
@@ -212,9 +213,9 @@ export async function createTestPage(testName?: string) {
 export async function setupTests(): Promise<void> {
   try {
     await getTestBrowser();
-    console.log('Test setup completed successfully');
+    // ready
   } catch (error) {
-    console.error('Test setup failed:', error instanceof Error ? error.message : String(error));
+    console.error('Test setup failed:', errorToString(error));
     throw error;
   }
 }
@@ -226,9 +227,9 @@ export async function setupTests(): Promise<void> {
 export async function teardownTests(): Promise<void> {
   try {
     await cleanupTestBrowser();
-    console.log('Test teardown completed successfully');
+    // done
   } catch (error) {
-    console.error('Test teardown failed:', error instanceof Error ? error.message : String(error));
+    console.error('Test teardown failed:', errorToString(error));
     // Don't throw during teardown to avoid masking test failures
   }
 }
@@ -241,7 +242,7 @@ export async function teardownTests(): Promise<void> {
  * @param context Additional context about when the error occurred
  */
 export function handleBrowserConnectionError(error: unknown, context: string = 'browser operation'): never {
-  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorMessage = errorToString(error);
 
   console.error(`Browser connection error during ${context}:`, errorMessage);
   console.error('Troubleshooting steps:');

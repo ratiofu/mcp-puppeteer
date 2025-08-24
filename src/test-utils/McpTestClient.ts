@@ -19,6 +19,7 @@ import {
   TOOL_NAMES
 } from '../types/api.js';
 import type { CallToolResult, ListToolsResult } from '@modelcontextprotocol/sdk/types.js';
+import { errorToString } from '../utils/error.js';
 
 /**
  * Test client wrapper for MCP communication using the official MCP SDK client
@@ -74,7 +75,7 @@ export class McpTestClient {
 
       this.initialized = true;
     } catch (error) {
-      throw new Error(`Failed to initialize MCP test client: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Failed to initialize MCP test client: ${errorToString(error)}`);
     }
   }
 
@@ -100,7 +101,7 @@ export class McpTestClient {
 
       return result as ToolResponseMap[T];
     } catch (error) {
-      throw new Error(`Tool call failed for ${toolName}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Tool call failed for ${toolName}: ${errorToString(error)}`);
     }
   }
 
@@ -167,7 +168,7 @@ export class McpTestClient {
     try {
       return await this.client.listTools();
     } catch (error) {
-      throw new Error(`Failed to list tools: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Failed to list tools: ${errorToString(error)}`);
     }
   }
 
@@ -239,10 +240,9 @@ export class McpTestClient {
       
       this.initialized = false;
     } catch (error) {
-      console.error(`Error during McpTestClient disconnect: ${error instanceof Error ? error.message : String(error)}`);
-      // Still mark as not initialized even if cleanup failed
+      console.error(`Error during McpTestClient disconnect: ${errorToString(error)}`);
+      // Still mark as not initialized even if cleanup failed; do not throw to avoid masking tests
       this.initialized = false;
-      throw error;
     }
   }
 }

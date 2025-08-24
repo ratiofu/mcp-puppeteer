@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { type Browser, type Page } from "puppeteer-core";
+import { type Browser, type Page, type BrowserContext } from "puppeteer-core";
 import { z } from "zod";
 import {
   ERROR_MESSAGES,
@@ -13,10 +13,12 @@ import {
   type GetConsoleResponse,
   type ListTabUrlsResponse
 } from './types/index.js';
+import { errorToString } from './utils/error.js';
 
 export class PuppeteerMcpServer extends McpServer {
 
   private page: Page | null = null;
+  private context: BrowserContext | null = null;
   private readonly browser: Browser;
   private readonly sessionId: string;
   private consoleLogs: string[] = [];
@@ -36,18 +38,21 @@ export class PuppeteerMcpServer extends McpServer {
       { url: z.string().url().describe("URL to navigate to") },
       async ({ url }: NavigateRequest): Promise<NavigateResponse> => {
         try {
+          if (!this.context) {
+            this.context = await this.browser.createBrowserContext();
+          }
           if (!this.page) {
-            this.page = await this.browser.newPage();
+            this.page = await this.context.newPage();
             this.setupConsoleListener();
           }
-          await this.page.goto(url);
+          await this.page.goto(url, { waitUntil: 'domcontentloaded' });
           return {
             content: [{ type: "text", text: `Navigated to ${url}` }],
             isError: false
           };
         } catch (error) {
           return {
-            content: [{ type: "text", text: `${ERROR_MESSAGES.NAVIGATION_FAILED}: ${error instanceof Error ? error.message : String(error)}` }],
+            content: [{ type: "text", text: `${ERROR_MESSAGES.NAVIGATION_FAILED}: ${errorToString(error)}` }],
             isError: true
           };
         }
@@ -60,14 +65,23 @@ export class PuppeteerMcpServer extends McpServer {
       {},
       async (): Promise<ListTabUrlsResponse> => {
         try {
-          const urls = (await this.browser.pages()).map(page => page.url());
+          // Limit to this server session's context pages for isolation
+          const urlsSet = new Set<string>();
+          if (this.page) {
+            urlsSet.add(this.page.url());
+          }
+          if (this.context) {
+            const pages = await this.context.pages();
+            for (const p of pages) urlsSet.add(p.url());
+          }
+          const urls = Array.from(urlsSet);
           return {
             content: [{ type: "text", text: `Current tab URLs: ${urls.join(", ")}` }],
             isError: false
           };
         } catch (error) {
           return {
-            content: [{ type: "text", text: `Failed to list tab URLs: ${error instanceof Error ? error.message : String(error)}` }],
+            content: [{ type: "text", text: `Failed to list tab URLs: ${errorToString(error)}` }],
             isError: true
           };
         }
@@ -86,6 +100,7 @@ export class PuppeteerMcpServer extends McpServer {
           };
         }
         try {
+          await this.page.waitForSelector(selector, { timeout: 300 });
           await this.page.click(selector);
           return {
             content: [{ type: "text", text: `Clicked on ${selector}` }],
@@ -93,7 +108,7 @@ export class PuppeteerMcpServer extends McpServer {
           };
         } catch (error) {
           return {
-            content: [{ type: "text", text: `${ERROR_MESSAGES.CLICK_FAILED}: ${error instanceof Error ? error.message : String(error)}` }],
+            content: [{ type: "text", text: `${ERROR_MESSAGES.CLICK_FAILED}: ${errorToString(error)}` }],
             isError: true
           };
         }
@@ -119,7 +134,7 @@ export class PuppeteerMcpServer extends McpServer {
           };
         } catch (error) {
           return {
-            content: [{ type: "text", text: `${ERROR_MESSAGES.SCREENSHOT_FAILED}: ${error instanceof Error ? error.message : String(error)}` }],
+            content: [{ type: "text", text: `${ERROR_MESSAGES.SCREENSHOT_FAILED}: ${errorToString(error)}` }],
             isError: true
           };
         }
@@ -145,7 +160,7 @@ export class PuppeteerMcpServer extends McpServer {
           };
         } catch (error) {
           return {
-            content: [{ type: "text", text: `${ERROR_MESSAGES.HTML_EXTRACTION_FAILED}: ${error instanceof Error ? error.message : String(error)}` }],
+            content: [{ type: "text", text: `${ERROR_MESSAGES.HTML_EXTRACTION_FAILED}: ${errorToString(error)}` }],
             isError: true
           };
         }
@@ -177,7 +192,7 @@ export class PuppeteerMcpServer extends McpServer {
           };
         } catch (error) {
           return {
-            content: [{ type: "text", text: `${ERROR_MESSAGES.CONSOLE_RETRIEVAL_FAILED}: ${error instanceof Error ? error.message : String(error)}` }],
+            content: [{ type: "text", text: `${ERROR_MESSAGES.CONSOLE_RETRIEVAL_FAILED}: ${errorToString(error)}` }],
             isError: true
           };
         }
@@ -195,13 +210,46 @@ export class PuppeteerMcpServer extends McpServer {
   }
 
   async disconnect() {
-    if (this.page) {
-      console.error("closing page for session", this.sessionId);
+    // Capture references and clear first to avoid races
+    const pageRef = this.page;
+    const contextRef = this.context;
+    this.page = null;
+    this.context = null;
+
+    // Fire-and-forget page close to avoid teardown hangs during in-flight navigations
+    if (pageRef) {
+      console.info("closing page for session", this.sessionId);
       try {
-        await this.page.close();
-        this.page = null;
+        // Do not await; ensure rejection is handled/logged
+        void pageRef.close().catch((error) => {
+          const msg = errorToString(error);
+          // Suppress noisy log when the page was already closed by context
+          if (!(msg.includes("No target with given id found") || msg.includes("Connection closed"))) {
+            console.error("Error closing page:", msg);
+          }
+        });
       } catch (error) {
-        console.error("Error closing page:", error);
+        const msg = errorToString(error);
+        if (!(msg.includes("No target with given id found") || msg.includes("Connection closed"))) {
+          console.error("Error closing page:", msg);
+        }
+      }
+    }
+
+    // Close context (also closes any remaining pages). Fire-and-forget to avoid hangs.
+    if (contextRef) {
+      try {
+        void contextRef.close().catch((error) => {
+          const msg = errorToString(error);
+          if (!msg.includes("Connection closed")) {
+            console.error("Error closing browser context:", msg);
+          }
+        });
+      } catch (error) {
+        const msg = errorToString(error);
+        if (!msg.includes("Connection closed")) {
+          console.error("Error closing browser context:", msg);
+        }
       }
     }
   }

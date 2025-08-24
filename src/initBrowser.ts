@@ -1,10 +1,11 @@
 import puppeteer, { type Browser } from "puppeteer-core";
-import { 
-  type BrowserConnectionConfig, 
+import {
+  type BrowserConnectionConfig,
   type BrowserInitResult,
   DEFAULT_CONFIG,
-  INTERNAL_ERROR_MESSAGES 
+  INTERNAL_ERROR_MESSAGES
 } from './types/index.js';
+import { errorToString } from './utils/error.js';
 
 /**
  * Initialize browser connection with proper error handling and typing
@@ -22,7 +23,7 @@ export async function initBrowser(config?: Partial<BrowserConnectionConfig>): Pr
   } catch (error) {
     console.error(INTERNAL_ERROR_MESSAGES.CHROMIUM_CONNECTION_FAILED);
     console.error(INTERNAL_ERROR_MESSAGES.CHROMIUM_LAUNCH_INSTRUCTION);
-    console.error('Error details:', error instanceof Error ? error.message : String(error));
+    console.error('Error details:', errorToString(error));
     process.exit(1);
   }
 }
@@ -38,6 +39,7 @@ export async function initBrowserSafe(config?: Partial<BrowserConnectionConfig>)
 
   try {
     const browser = await puppeteer.connect(connectionConfig);
+
     return {
       success: true,
       browser
@@ -45,7 +47,7 @@ export async function initBrowserSafe(config?: Partial<BrowserConnectionConfig>)
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : String(error)
+      error: errorToString(error)
     };
   }
 }

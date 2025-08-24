@@ -1,5 +1,6 @@
 import { Page } from 'puppeteer-core';
 import { createTestPage } from './test-setup.js';
+import { errorToString } from '../utils/error.js';
 
 /**
  * Common test helper functions for browser testing
@@ -178,7 +179,7 @@ export async function safeClosePage(page: Page): Promise<void> {
       await page.close();
     }
   } catch (error) {
-    console.warn('Failed to close page:', error instanceof Error ? error.message : String(error));
+    console.warn('Failed to close page:', errorToString(error));
   }
 }
 

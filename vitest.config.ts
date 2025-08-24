@@ -53,10 +53,13 @@ export default defineConfig({
     pool: 'threads',
     poolOptions: {
       threads: {
-        // Limit concurrency for browser resources to avoid conflicts
-        maxThreads: 4, // Run tests sequentially to avoid browser conflicts
+        // Enable parallelism; per-session incognito contexts ensure isolation
+        maxThreads: 4,
         minThreads: 1
       }
-    }
+    },
+
+    // Global setup/teardown once per entire test run (not per worker)
+    globalSetup: ['./src/test-utils/global-setup.ts']
   }
 });

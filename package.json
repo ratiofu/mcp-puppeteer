@@ -31,6 +31,7 @@
     "remote:publish": "./scripts/remote-publish.sh",
     "local:publish": "./scripts/local-publish.sh",
     "local:cleanup": "./scripts/local-cleanup.sh",
+    "cleanup:chromium": "./scripts/cleanup-chromium-test-profiles.sh",
     "dev": "concurrently \"node esbuild.config.js --watch\" \"nodemon --watch dist --exec 'node dist/index.js' dist/index.js\"",
     "dev:inspector": "concurrently \"node esbuild.config.js --watch\" \"nodemon --watch dist --delay 2 --exec 'pnpm run restart-inspector' dist/index.js\"",
     "inspector": "npx @modelcontextprotocol/inspector node dist/index.js",
