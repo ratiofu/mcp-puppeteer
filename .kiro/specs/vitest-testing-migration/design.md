@@ -668,15 +668,17 @@ export async function withErrorHandling<T>(
 
 ### Unit Tests
 - Individual tool functionality
-- Parameter validation
+- Parameter validation (implicitly tested through tool calls)
 - Error response handling
-- Schema validation
+- Error path coverage for catch blocks
 
 ### Integration Tests
 - Full MCP protocol communication
 - Browser interaction workflows
 - Session management
 - Resource cleanup
+- Main entry point testing (index.ts, initBrowser.ts)
+- End-to-end server functionality
 
 ### Parallel Execution Tests
 - Multiple concurrent tool calls
@@ -698,6 +700,16 @@ describe('PuppeteerMcpServer', () => {
     });
   });
   
+  describe('Error Path Coverage', () => {
+    it('should handle tool execution failures', async () => {
+      // Force error conditions to test catch blocks
+    });
+    
+    it('should handle page cleanup failures', async () => {
+      // Test disconnect method error handling
+    });
+  });
+  
   describe('Session Management', () => {
     it('should isolate sessions', async () => {
       // Parallel execution testing
@@ -716,6 +728,12 @@ describe('Integration Tests', () => {
     // 6. Extract HTML content
     // 7. Verify console output
     // 8. Cleanup
+  });
+  
+  it('should test main entry points', async () => {
+    // Test index.ts server startup
+    // Test initBrowser.ts connection logic
+    // Test end-to-end functionality
   });
 });
 ```

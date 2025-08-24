@@ -51,7 +51,6 @@ This feature involves migrating the current bash-based testing infrastructure to
 4. WHEN testing the take_screenshot tool THEN it SHALL verify screenshot capture and base64 encoding
 5. WHEN testing the get_html tool THEN it SHALL validate HTML content extraction
 6. WHEN testing the get_console tool THEN it SHALL verify console output capture and clearing functionality
-7. WHEN testing tool schemas THEN each tool's parameter validation SHALL be verified
 
 ### Requirement 5
 
@@ -98,6 +97,8 @@ This feature involves migrating the current bash-based testing infrastructure to
 3. WHEN testing browser connection failures THEN error handling SHALL be verified
 4. WHEN testing resource cleanup THEN proper disconnection behavior SHALL be validated
 5. WHEN testing concurrent access THEN thread safety and session isolation SHALL be verified
+6. WHEN testing error paths in tool implementations THEN all catch blocks and error handling code SHALL be covered
+7. WHEN testing main application entry points THEN server startup and browser initialization SHALL be verified
 
 ### Requirement 9
 

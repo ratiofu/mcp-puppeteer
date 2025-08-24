@@ -93,19 +93,18 @@
   - Test session isolation between different test instances
   - _Requirements: 4.2, 5.3_
 
-- [ ] 5. Implement schema validation tests
-- [ ] 5.1 Create tool schema validation tests
-  - Write tests to verify each tool's parameter schema matches Zod definitions
-  - Test parameter validation for required and optional fields
-  - Verify error responses for invalid parameter types
-  - Test schema compatibility with MCP protocol requirements
-  - _Requirements: 4.7, 8.2_
+- [ ] 5. Improve error path coverage and add integration tests
+- [ ] 5.1 Add error path tests for PuppeteerMcpServer
+  - Test error handling in list_tab_urls, take_screenshot, get_html, get_console tools
+  - Test page cleanup error handling in disconnect method
+  - Force error conditions to cover uncovered catch blocks (lines 69-73, 121-125, 147-151, 179-183, 204-205)
+  - _Requirements: 8.1, 8.2, 8.6_
 
-- [ ] 5.2 Create MCP protocol compliance tests
-  - Write tests to verify tool responses conform to MCP CallToolResult format
-  - Test tool listing functionality returns correct schema information
-  - Verify client-server communication follows MCP protocol standards
-  - _Requirements: 6.2, 6.3_
+- [ ] 5.2 Add integration tests for main entry points
+  - Test server startup and transport initialization in index.ts
+  - Test browser connection logic in initBrowser.ts
+  - Test end-to-end server functionality with real MCP protocol communication
+  - _Requirements: 7.2, 7.3, 8.7_
 
 - [ ] 6. Implement parallel execution and session isolation tests
 - [ ] 6.1 Create concurrent tool execution tests
