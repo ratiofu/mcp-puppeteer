@@ -37,6 +37,7 @@ export default defineConfig({
       exclude: [
         'src/**/_tests/**', // Exclude all test files
         'src/test-utils/vitest-setup.ts', // Exclude test setup file
+        'src/index.ts', // CLI entrypoint not unit-tested
         'src/**/*.d.ts' // Exclude type definition files
         // Note: test-utils utility files (like test-web-server.ts) are now included in coverage
       ],
