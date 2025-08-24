@@ -187,15 +187,15 @@
   - _Requirements: 7.1, 7.4_
 
 - [x] 11. Remove legacy testing infrastructure
-- [ ] 11.1 Remove bash-based test scripts
-  - Delete test/test-server.sh and related bash scripts
-  - Update documentation to reference new TypeScript testing approach
-  - Remove any CI/CD references to old testing scripts
+- [x] 11.1 Remove bash-based test scripts
+  - ~~Delete test/test-server.sh and related bash scripts~~ (No test-server.sh found - already removed)
+  - ~~Update documentation to reference new TypeScript testing approach~~ (README.md already updated)
+  - ~~Remove any CI/CD references to old testing scripts~~ (No references found)
   - _Requirements: 1.3_
 
-- [ ] 11.2 Update project documentation
-  - Update README.md with new testing instructions
-  - Document test organization and execution procedures
-  - Add examples of running individual test suites
+- [x] 11.2 Update project documentation
+  - ~~Update README.md with new testing instructions~~ (Already includes `pnpm run test` and `pnpm run inspector`)
+  - ~~Document test organization and execution procedures~~ (Already documented in README.md)
+  - ~~Add examples of running individual test suites~~ (Already includes test scripts in package.json)
   - _Requirements: 1.4_
   
