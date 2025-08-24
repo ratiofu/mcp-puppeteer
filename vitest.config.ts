@@ -12,7 +12,7 @@ export default defineConfig({
     setupFiles: ['./src/test-utils/vitest-setup.ts'],
 
     // Timeout settings for browser operations
-    testTimeout: 30000, // 30 seconds for individual tests
+    testTimeout: 10000, // 10 seconds for individual tests
     hookTimeout: 5_000,  // 5 seconds for setup/teardown hooks
     teardownTimeout: 5_000, // 5 seconds for cleanup
 
@@ -31,7 +31,7 @@ export default defineConfig({
     // Coverage configuration
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov', 'json'],
+      reporter: ['text', 'lcov'],
       reportsDirectory: './coverage',
       include: ['src/**/*.ts'],
       exclude: [

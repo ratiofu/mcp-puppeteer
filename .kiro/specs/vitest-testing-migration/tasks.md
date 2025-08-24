@@ -12,7 +12,7 @@
   - Create union types for convenience and type safety
   - _Requirements: 7.1, 1.2_
 
-- [ ] 3. Implement test utilities and infrastructure
+- [x] 3. Implement test utilities and infrastructure
 - [x] 3.1 Create test setup and browser management utilities
   - Write test-setup.ts with shared browser instance management
   - Implement browser lifecycle functions for test initialization and cleanup
@@ -38,11 +38,17 @@
   - Add initialization and cleanup methods for test lifecycle
   - _Requirements: 6.1, 6.3, 6.4_
 
-- [ ] 3.5 Create test server factory
-  - Implement createTestServer function for test server instantiation
+- [x] 3.5 Create test context factory
+  - Implement createTestContext function with lazy initialization pattern
   - Ensure proper session isolation between test instances
   - Add helper functions for common test setup patterns
+  - Implement class-based TestContext with lazy getters for expensive components
   - _Requirements: 2.2, 5.3_
+
+- [x] 3.6 Finalize the test context factory creation changes
+  - Observe all pending changes from previous sessions
+  - Run tests one more time
+  - Ensure design spec is aligned with the code (code is the source of truth)
 
 - [ ] 4. Implement individual tool tests
 - [ ] 4.1 Create navigate tool tests

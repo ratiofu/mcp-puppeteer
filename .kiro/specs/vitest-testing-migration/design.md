@@ -335,15 +335,188 @@ export type ToolRequest = NavigateRequest | ClickRequest | GetConsoleRequest;
 export type ToolResponse = NavigateResponse | ClickResponse | ScreenshotResponse | GetHtmlResponse | GetConsoleResponse | ListTabUrlsResponse;
 ```
 
-### 7. Test Server Factory (`src/test-utils/test-server-factory.ts`)
+### 7. Test Context Factory (`src/test-utils/test-context-factory.ts`)
 
 ```typescript
-import { Browser } from 'puppeteer-core';
-import { PuppeteerMcpServer } from '../PuppeteerMcpServer.js';
-
-export function createTestServer(sessionId: string, browser: Browser): PuppeteerMcpServer {
-  return new PuppeteerMcpServer(sessionId, browser);
+export interface TestContextConfig {
+  /** Descriptive label for the test (used to generate unique session ID) */
+  testLabel: string;
+  /** Browser instance to use (optional, will use shared browser if not provided) */
+  browser?: Browser;
+  /** Base directory for resolving relative paths in web resources (defaults to current working directory) */
+  webResourcesBaseDir?: string;
 }
+
+export class TestContext {
+  public readonly sessionId: string;
+  public readonly browser: Browser;
+  public readonly webResourcesBaseDir: string;
+
+  private _client: McpTestClient;
+  private _webServer: TestWebServer | null = null;
+
+  constructor(config: InternalTestContextConfig) {
+    this.sessionId = config.sessionId;
+    this.browser = config.browser;
+    this.webResourcesBaseDir = config.webResourcesBaseDir || process.cwd();
+    this._client = config.client;
+  }
+
+  get client(): McpTestClient {
+    return this._client;
+  }
+
+  get server(): PuppeteerMcpServer {
+    return this.client.getServer();
+  }
+
+  get webServer(): TestWebServer {
+    if (!this._webServer) {
+      this._webServer = new TestWebServer(this.webResourcesBaseDir);
+    }
+    return this._webServer;
+  }
+
+  async cleanup(): Promise<void> {
+    // Cleanup implementation with error handling
+  }
+}
+
+export async function withTestContext<T>(
+  testLabelOrConfig: string | TestContextConfig,
+  testFn: (context: TestContext) => Promise<T>
+): Promise<T> {
+  const config: TestContextConfig = typeof testLabelOrConfig === 'string'
+    ? { testLabel: testLabelOrConfig }
+    : testLabelOrConfig;
+
+  const context = await createTestContext(config);
+
+  try {
+    return await testFn(context);
+  } finally {
+    await context.cleanup();
+  }
+}
+```
+
+The test context factory provides:
+- **Lazy Initialization**: Components are created only when needed
+- **Session Isolation**: Each test gets a unique session ID
+- **Automatic Cleanup**: Resources are cleaned up even if tests fail
+- **Flexible Configuration**: Supports both simple string labels and full config objects
+- **Type Safety**: Full TypeScript support with proper typing
+
+### 8. Test Fixtures (`src/test-utils/test-fixtures.ts`)
+
+```typescript
+/**
+ * Interactive HTML page with buttons, forms, and JavaScript for testing interactions
+ */
+export const interactiveHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interactive Test Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { margin: 10px; padding: 10px 20px; }
+        .result { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Interactive Test Page</h1>
+    
+    <button id="test-button" onclick="handleButtonClick()">Click Me</button>
+    <button id="console-button" onclick="logToConsole()">Log to Console</button>
+    <button id="error-button" onclick="throwError()">Throw Error</button>
+    
+    <div id="result" class="result">No actions performed yet</div>
+    
+    <form id="test-form" onsubmit="handleFormSubmit(event)">
+        <input type="text" id="text-input" placeholder="Enter text" />
+        <button type="submit">Submit Form</button>
+    </form>
+    
+    <a href="/page2" id="navigation-link">Navigate to Page 2</a>
+    
+    <script>
+        // Interactive JavaScript for testing browser automation
+        let clickCount = 0;
+        
+        function handleButtonClick() {
+            clickCount++;
+            document.getElementById('result').textContent = \`Button clicked \${clickCount} times\`;
+            console.log(\`Button clicked \${clickCount} times\`);
+        }
+        
+        function logToConsole() {
+            console.log('Test log message');
+            console.warn('Test warning message');
+            console.error('Test error message');
+            document.getElementById('result').textContent = 'Check console for log messages';
+        }
+        
+        function throwError() {
+            console.error('Intentional test error');
+            throw new Error('This is a test error');
+        }
+        
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const input = document.getElementById('text-input');
+            document.getElementById('result').textContent = \`Form submitted with: \${input.value}\`;
+            console.log(\`Form submitted with: \${input.value}\`);
+        }
+    </script>
+</body>
+</html>\`;
+
+/**
+ * Second page for navigation testing
+ */
+export const page2Html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Page 2</title>
+</head>
+<body>
+    <h1>Page 2</h1>
+    <p>This is the second page for navigation testing.</p>
+    <a href="/" id="back-link">Back to Page 1</a>
+    <script>
+        console.log('Page 2 loaded');
+    </script>
+</body>
+</html>\`;
+```
+
+**Test Fixtures Guidelines:**
+- **Reusability**: All shareable HTML fixtures, test data, and common test scenarios should be defined in `test-fixtures.ts`
+- **Consistency**: Tests should reuse existing fixtures rather than creating inline HTML strings
+- **Maintainability**: When adding new test scenarios, check if existing fixtures can be extended or if new reusable fixtures should be created
+- **Documentation**: Each fixture should have clear JSDoc comments explaining its purpose and key interactive elements
+- **Interactive Elements**: Fixtures should include relevant interactive elements (buttons, forms, links) with proper IDs for easy testing
+- **Console Integration**: Fixtures should include JavaScript that logs to console for testing console capture functionality
+
+**Usage Example:**
+```typescript
+import { interactiveHtml, page2Html } from '../test-fixtures.js';
+
+await withTestContext('button-interaction-test', async (context) => {
+  await context.webServer.addResource({
+    path: '/',
+    body: interactiveHtml,
+    contentType: 'text/html'
+  });
+  
+  await context.client.navigate(context.webServer.getUrl('/'));
+  await context.client.click('#test-button');
+  
+  const html = await context.client.getHtml();
+  expect(html.content[0].text).toContain('Button clicked 1 times');
+});
 ```
 
 ## Data Models
@@ -372,7 +545,7 @@ src/
 │   ├── mcp-test-client.ts          # MCP client wrapper
 │   ├── test-transport.ts           # In-memory transport
 │   ├── test-web-server.ts          # Local web server for tests
-│   ├── test-server-factory.ts      # Server factory for tests
+│   ├── test-context-factory.ts     # Test context factory for tests
 │   ├── test-setup.ts               # Global test setup
 │   └── test-helpers.ts             # Common test utilities
 └── types/

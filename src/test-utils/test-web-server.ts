@@ -38,15 +38,34 @@ export class TestWebServer {
     });
   }
 
-  addResource(resource: TestResource): void {
+  addResource(resource: TestResource): Promise<void> {
     this.resources.set(resource.path, resource);
+    // Auto-start server when first resource is added
+    if (!this.isRunning) {
+      return this.start().then(() => {}).catch(error => {
+        console.error('Failed to auto-start test web server:', error);
+        throw error;
+      });
+    }
+    return Promise.resolve();
   }
 
-  addResources(resources: TestResource[]): void {
-    resources.forEach(resource => this.addResource(resource));
+  addResources(resources: TestResource[]): Promise<void> {
+    resources.forEach(resource => this.resources.set(resource.path, resource));
+    // Auto-start server when resources are added
+    if (!this.isRunning && resources.length > 0) {
+      return this.start().then(() => {}).catch(error => {
+        console.error('Failed to auto-start test web server:', error);
+        throw error;
+      });
+    }
+    return Promise.resolve();
   }
 
   getUrl(path: string = '/'): string {
+    if (!this.isRunning) {
+      throw new Error('Test web server is not running. Add resources first to auto-start the server.');
+    }
     return `http://localhost:${this.port}${path}`;
   }
 

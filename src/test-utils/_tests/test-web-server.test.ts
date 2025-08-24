@@ -172,11 +172,14 @@ describe('TestWebServer', () => {
     let response = await fetch(server.getUrl('/test'));
     expect(response.status).toBe(200);
 
+    // Get URL before stopping server
+    const testUrl = server.getUrl('/test');
+    
     // Stop server
     await server.stop();
 
     // Verify server is stopped - should reject with connection error
-    await expect(fetch(server.getUrl('/test'))).rejects.toThrowError();
+    await expect(fetch(testUrl)).rejects.toThrowError();
     
     // Verify multiple stops don't cause errors
     await expect(server.stop()).resolves.toBeUndefined();

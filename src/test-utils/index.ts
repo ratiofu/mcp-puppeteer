@@ -14,3 +14,9 @@ export * from './test-transport.js';
 
 // MCP test client wrapper
 export * from './mcp-test-client.js';
+
+// Test context factory and utilities
+export * from './test-context-factory.js';
+
+// Test fixtures for reusable HTML content
+export * from './test-fixtures.js';

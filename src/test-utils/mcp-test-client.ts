@@ -180,6 +180,14 @@ export class McpTestClient {
   }
 
   /**
+   * Get the MCP server instance for this test client
+   * @returns The PuppeteerMcpServer instance
+   */
+  getServer(): PuppeteerMcpServer {
+    return this.server;
+  }
+
+  /**
    * Check if the client is initialized and ready for use
    * @returns True if initialized, false otherwise
    */
