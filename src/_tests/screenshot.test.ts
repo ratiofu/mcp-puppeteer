@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { withTestContext } from '../test-utils/TestContext.js';
 import { interactiveHtml, page2Html } from '../test-utils/test-fixtures.js';
-import { ScreenshotResponse, TOOL_NAMES } from '../types/api.js';
+import { TOOL_NAMES, type ScreenshotResponse } from '../types/api.js';
 
 describe('Screenshot Tool', () => {
   describe('Valid Screenshot Capture', () => {

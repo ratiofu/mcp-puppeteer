@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { withTestContext } from '../test-utils/TestContext.js';
 import { interactiveHtml } from '../test-utils/test-fixtures.js';
-import { GetConsoleResponse, TOOL_NAMES } from '../types/api.js';
+import { TOOL_NAMES, type GetConsoleResponse } from '../types/api.js';
 
 describe('Console Tool', () => {
   describe('Valid Console Output Capture', () => {

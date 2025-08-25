@@ -1,6 +1,5 @@
-import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
-import { JSONRPCMessage, MessageExtraInfo } from '@modelcontextprotocol/sdk/types.js';
-import type { TransportSendOptions } from '@modelcontextprotocol/sdk/shared/transport.js';
+import type { Transport, TransportSendOptions } from '@modelcontextprotocol/sdk/shared/transport.js';
+import type { JSONRPCMessage, MessageExtraInfo } from '@modelcontextprotocol/sdk/types.js';
 
 /**
  * In-memory transport for testing MCP communication

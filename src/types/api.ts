@@ -1,5 +1,5 @@
 // Import MCP SDK types for protocol compliance
-import { 
+import type { 
   CallToolResult, 
   TextContent, 
   ImageContent 

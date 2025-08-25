@@ -1,6 +1,6 @@
-import { execSync } from 'child_process';
 import { errorToString } from '../utils/error.js';
 import { isTruthy } from './envUtils.js';
+import { ConcreteProcessOperations, type ProcessOperations } from '../io/index.js';
 
 /**
  * Find the Chromium executable path using system commands
@@ -10,9 +10,10 @@ import { isTruthy } from './envUtils.js';
  * @returns The path to the Chromium executable
  * @throws Error if no Chromium executable is found
  */
-export function findChromiumExecutable(skipLocalDiscovery: boolean = false): string {
+export function findChromiumExecutable(skipLocalDiscovery: boolean = false, process?: ProcessOperations): string {
+  const processOps = process || new ConcreteProcessOperations();
   // Check environment variable to disable local discovery
-  if (skipLocalDiscovery || isTruthy(process.env.DISABLE_LOCAL_CHROMIUM_DISCOVERY)) {
+  if (skipLocalDiscovery || isTruthy(processOps.getEnv('DISABLE_LOCAL_CHROMIUM_DISCOVERY'))) {
     throw new Error('Local Chromium discovery disabled by configuration');
   }
 
@@ -26,7 +27,7 @@ export function findChromiumExecutable(skipLocalDiscovery: boolean = false): str
 
   for (const command of commands) {
     try {
-      const result = execSync(command, { encoding: 'utf8', stdio: 'pipe' }).trim();
+      const result = processOps.execSync(command, { encoding: 'utf8', stdio: 'pipe' }).trim();
       if (result) {
         console.log(`Found browser executable via command '${command}': ${result}`);
         return result;
@@ -42,7 +43,7 @@ export function findChromiumExecutable(skipLocalDiscovery: boolean = false): str
 
   for (const path of fallbackPaths) {
     try {
-      execSync(`test -f "${path}"`, { stdio: 'pipe' });
+      processOps.execSync(`test -f "${path}"`, { stdio: 'pipe' });
       console.log(`Found browser executable at fallback path: ${path}`);
       return path;
     } catch (err) {

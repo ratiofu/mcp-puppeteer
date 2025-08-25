@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { withTestContext } from '../test-utils/TestContext.js';
 import { interactiveHtml } from '../test-utils/test-fixtures.js';
-import { ClickResponse, TOOL_NAMES } from '../types/api.js';
+import { TOOL_NAMES, type ClickResponse } from '../types/api.js';
 
 describe('Click Tool', () => {
   describe('Valid Element Clicking', () => {

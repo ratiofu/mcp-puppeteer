@@ -1,7 +1,7 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { errorToString } from '../utils/error.js';
+import { ConcreteFileSystemOperations, type FileSystemOperations } from '../io/index.js';
 
 export interface TestResource {
   path: string;
@@ -15,9 +15,11 @@ export class TestWebServer {
   private port: number = 0;
   private resources: Map<string, TestResource> = new Map();
   private isRunning: boolean = false;
+  private fs: FileSystemOperations;
 
-  constructor(private testDir: string) {
+  constructor(private testDir: string, fs?: FileSystemOperations) {
     this.server = createServer(this.handleRequest.bind(this));
+    this.fs = fs || new ConcreteFileSystemOperations();
   }
 
   async start(): Promise<number> {
@@ -84,7 +86,7 @@ export class TestWebServer {
         body = resource.body;
       } else if (resource.bodySourcePath) {
         const fullPath = join(this.testDir, resource.bodySourcePath);
-        body = await readFile(fullPath, 'utf-8');
+        body = await this.fs.readFile(fullPath, 'utf-8');
       } else {
         res.writeHead(400, { 'Content-Type': 'text/plain' });
         res.end('No body or bodySourcePath specified');

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ChromeForTestingAPI } from '../ChromeForTestingAPI.js';
-import { DownloadOptions } from '../types.js';
+import type { DownloadOptions } from '../types.js';
 import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';

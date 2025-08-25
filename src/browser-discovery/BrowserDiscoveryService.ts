@@ -1,11 +1,10 @@
-import { execSync } from 'child_process';
-import { existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import { BrowserInstallation } from './BrowserInstallation.js';
 import { findChromiumExecutable } from './findChromiumExecutable.js';
 import { errorToString } from '../utils/error.js';
 import { isTruthy } from './envUtils.js';
+import { ConcreteProcessOperations, ConcreteFileSystemOperations, type ProcessOperations, type FileSystemOperations } from '../io/index.js';
 
 /**
  * Request options for finding the best browser
@@ -51,10 +50,14 @@ export interface CheckRunningBrowserRequest {
  */
 export class BrowserDiscoveryService {
   private readonly managedInstallPath: string;
+  private process: ProcessOperations;
+  private fs: FileSystemOperations;
 
-  constructor() {
+  constructor(process?: ProcessOperations, fs?: FileSystemOperations) {
     // Default managed installation path: ~/.puppeteer-mcp/chromium/
     this.managedInstallPath = join(homedir(), '.puppeteer-mcp', 'chromium');
+    this.process = process || new ConcreteProcessOperations();
+    this.fs = fs || new ConcreteFileSystemOperations();
   }
 
   /**
@@ -65,10 +68,10 @@ export class BrowserDiscoveryService {
     const installations: BrowserInstallation[] = [];
 
     // Discover system browsers (unless disabled)
-    const skipLocal = isTruthy(process.env.DISABLE_LOCAL_CHROMIUM_DISCOVERY);
+    const skipLocal = isTruthy(this.process.getEnv('DISABLE_LOCAL_CHROMIUM_DISCOVERY'));
     if (!skipLocal) {
       try {
-        const systemBrowser = await discoverSystemBrowser();
+        const systemBrowser = await this.discoverSystemBrowser();
         if (systemBrowser) {
           installations.push(systemBrowser);
         }
@@ -79,7 +82,7 @@ export class BrowserDiscoveryService {
 
     // Discover managed browsers
     try {
-      const managedBrowsers = await discoverManagedBrowsers(this.managedInstallPath);
+      const managedBrowsers = await this.discoverManagedBrowsers();
       installations.push(...managedBrowsers);
     } catch (error) {
       console.warn(`Managed browser discovery failed: ${errorToString(error)}`);
@@ -145,7 +148,7 @@ export class BrowserDiscoveryService {
         ? `powershell -Command "try { Invoke-WebRequest -Uri 'http://localhost:${port}/json/version' -TimeoutSec 2 | Out-Null; exit 0 } catch { exit 1 }"`
         : `curl -s --connect-timeout 2 http://localhost:${port}/json/version > /dev/null`;
 
-      execSync(command, { stdio: 'pipe' });
+      this.process.execSync(command, { stdio: 'pipe' });
       return true;
     } catch (error) {
       // Connection failed, browser is not running with debug port
@@ -153,6 +156,116 @@ export class BrowserDiscoveryService {
     }
   }
 
+  /**
+   * Discover system browser installation
+   * @returns Promise resolving to BrowserInstallation or null if not found
+   */
+  private async discoverSystemBrowser(): Promise<BrowserInstallation | null> {
+    try {
+      const executablePath = findChromiumExecutable(false, this.process);
+      const version = await this.getBrowserVersion(executablePath);
+
+      // Create unverified installation (verification can be done later if needed)
+      return new BrowserInstallation(executablePath, version, 'system', false);
+    } catch (error) {
+      console.warn(`System browser discovery failed: ${errorToString(error)}`);
+      return null;
+    }
+  }
+
+  /**
+   * Get browser version from executable
+   * @param executablePath Path to browser executable
+   * @returns Promise resolving to version string
+   */
+  private async getBrowserVersion(executablePath: string): Promise<string> {
+    try {
+      const command = `"${executablePath}" --version`;
+      const output = this.process.execSync(command, { encoding: 'utf8', stdio: 'pipe' }).trim();
+
+      // Extract version number from output (e.g., "Chromium 120.0.6099.109" -> "120.0.6099.109")
+      const versionMatch = output.match(/(\d+\.\d+\.\d+\.\d+)/);
+      if (versionMatch) {
+        return versionMatch[1];
+      }
+
+      // Fallback: return the full output if we can't parse it
+      return output;
+    } catch (error) {
+      console.warn(`Failed to get browser version for ${executablePath}: ${errorToString(error)}`);
+      return 'unknown';
+    }
+  }
+
+  /**
+   * Discover managed browser installations
+   * @returns Promise resolving to array of managed BrowserInstallation instances
+   */
+  private async discoverManagedBrowsers(): Promise<BrowserInstallation[]> {
+    const installations: BrowserInstallation[] = [];
+
+    if (!this.fs.existsSync(this.managedInstallPath)) {
+      return installations;
+    }
+
+    try {
+      const entries = await this.fs.readdir(this.managedInstallPath, { withFileTypes: true });
+      const versionDirs = entries
+        .filter(entry => entry.isDirectory())
+        .map(entry => entry.name);
+
+      for (const versionDir of versionDirs) {
+        try {
+          const versionPath = join(this.managedInstallPath, versionDir);
+          const executablePath = this.findExecutableInDirectory(versionPath);
+
+          if (executablePath && this.fs.existsSync(executablePath)) {
+            // Use directory name as version (should match the actual version)
+            const version = versionDir;
+            installations.push(new BrowserInstallation(executablePath, version, 'managed', false));
+          }
+        } catch (error) {
+          console.warn(`Failed to process managed browser in ${versionDir}: ${errorToString(error)}`);
+        }
+      }
+    } catch (error) {
+      console.warn(`Failed to read managed browser directory: ${errorToString(error)}`);
+    }
+
+    return installations;
+  }
+
+  /**
+   * Find the executable file in a managed browser directory
+   * @param directory Directory to search for executable
+   * @returns Path to executable or null if not found
+   */
+  private findExecutableInDirectory(directory: string): string | null {
+    const platform = process.platform;
+
+    // Platform-specific executable names
+    const executableNames = platform === 'win32'
+      ? ['chrome.exe', 'chromium.exe']
+      : ['chrome', 'chromium'];
+
+    for (const execName of executableNames) {
+      const execPath = join(directory, execName);
+      if (this.fs.existsSync(execPath)) {
+        return execPath;
+      }
+
+      // Also check in common subdirectories
+      const subDirs = ['bin', 'chrome-linux', 'chrome-mac', 'chrome-win'];
+      for (const subDir of subDirs) {
+        const subDirPath = join(directory, subDir, execName);
+        if (this.fs.existsSync(subDirPath)) {
+          return subDirPath;
+        }
+      }
+    }
+
+    return null;
+  }
 }
 
 /**
@@ -188,115 +301,4 @@ function compareVersions(version1: string, version2: string): number {
   return 0;
 }
 
-/**
- * Find the executable file in a managed browser directory
- * @param directory Directory to search for executable
- * @returns Path to executable or null if not found
- */
-function findExecutableInDirectory(directory: string): string | null {
-  const platform = process.platform;
 
-  // Platform-specific executable names
-  const executableNames = platform === 'win32'
-    ? ['chrome.exe', 'chromium.exe']
-    : ['chrome', 'chromium'];
-
-  for (const execName of executableNames) {
-    const execPath = join(directory, execName);
-    if (existsSync(execPath)) {
-      return execPath;
-    }
-
-    // Also check in common subdirectories
-    const subDirs = ['bin', 'chrome-linux', 'chrome-mac', 'chrome-win'];
-    for (const subDir of subDirs) {
-      const subDirPath = join(directory, subDir, execName);
-      if (existsSync(subDirPath)) {
-        return subDirPath;
-      }
-    }
-  }
-
-  return null;
-}
-
-/**
- * Discover managed browser installations
- * @param managedInstallPath Path to the managed browser installation directory
- * @returns Promise resolving to array of managed BrowserInstallation instances
- */
-async function discoverManagedBrowsers(managedInstallPath: string): Promise<BrowserInstallation[]> {
-  const installations: BrowserInstallation[] = [];
-
-  if (!existsSync(managedInstallPath)) {
-    return installations;
-  }
-
-  try {
-    const versionDirs = readdirSync(managedInstallPath)
-      .filter(name => {
-        const fullPath = join(managedInstallPath, name);
-        return statSync(fullPath).isDirectory();
-      });
-
-    for (const versionDir of versionDirs) {
-      try {
-        const versionPath = join(managedInstallPath, versionDir);
-        const executablePath = findExecutableInDirectory(versionPath);
-
-        if (executablePath && existsSync(executablePath)) {
-          // Use directory name as version (should match the actual version)
-          const version = versionDir;
-          installations.push(new BrowserInstallation(executablePath, version, 'managed', false));
-        }
-      } catch (error) {
-        console.warn(`Failed to process managed browser in ${versionDir}: ${errorToString(error)}`);
-      }
-    }
-  } catch (error) {
-    console.warn(`Failed to read managed browser directory: ${errorToString(error)}`);
-  }
-
-  return installations;
-}
-
-/**
- * Discover system browser installation
- * @returns Promise resolving to BrowserInstallation or null if not found
- */
-async function discoverSystemBrowser(): Promise<BrowserInstallation | null> {
-  try {
-    const executablePath = findChromiumExecutable();
-    const version = await getBrowserVersion(executablePath);
-
-    // Create unverified installation (verification can be done later if needed)
-    return new BrowserInstallation(executablePath, version, 'system', false);
-  } catch (error) {
-    console.warn(`System browser discovery failed: ${errorToString(error)}`);
-    return null;
-  }
-}
-
-/**
- * Get browser version from executable
- * @param executablePath Path to browser executable
- * @returns Promise resolving to version string
- */
-async function getBrowserVersion(executablePath: string): Promise<string> {
-  try {
-    const command = `"${executablePath}" --version`;
-    const output = execSync(command, { encoding: 'utf8', stdio: 'pipe' }).trim();
-
-    // Extract version number from output (e.g., "Chromium 120.0.6099.109" -> "120.0.6099.109")
-    const versionMatch = output.match(/(\d+\.\d+\.\d+\.\d+)/);
-    if (versionMatch) {
-      return versionMatch[1];
-    }
-
-    // Fallback: return the full output if we can't parse it
-    return output;
-  } catch (error) {
-    console.warn(`Failed to get browser version for ${executablePath}: ${errorToString(error)}`);
-    return 'unknown';
-  }
-}

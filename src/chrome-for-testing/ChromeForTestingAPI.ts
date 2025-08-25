@@ -1,23 +1,30 @@
-import { createWriteStream } from 'fs';
-import { mkdir } from 'fs/promises';
-import { dirname, join } from 'path';
-import { pipeline } from 'stream/promises';
+import { join } from 'path';
 import { detectPlatform } from '../browser-discovery/envUtils.js';
-import { 
+import type { 
   BrowserVersion, 
-  ChromeForTestingResponse, 
   DownloadOptions, 
-  DownloadProgress, 
   DownloadResult
 } from './types.js';
+import { 
+  compareVersions,
+  extractFilenameFromUrl,
+  findPlatformDownload,
+  findLatestVersion,
+  findVersionByString,
+  transformApiResponse
+} from './core.js';
+import { DefaultChromeForTestingOperations, type ChromeForTestingOperations } from './operations.js';
 
 /**
  * Chrome for Testing API integration service
  * Provides access to available Chromium versions and download functionality
  */
 export class ChromeForTestingAPI {
-  private static readonly API_BASE_URL = 'https://googlechromelabs.github.io/chrome-for-testing';
-  private static readonly VERSIONS_ENDPOINT = '/known-good-versions-with-downloads.json';
+  private operations: ChromeForTestingOperations;
+
+  constructor(operations?: ChromeForTestingOperations) {
+    this.operations = operations || new DefaultChromeForTestingOperations();
+  }
 
   /**
    * Fetch available browser versions from Chrome for Testing API
@@ -25,22 +32,8 @@ export class ChromeForTestingAPI {
    */
   async getAvailableVersions(): Promise<BrowserVersion[]> {
     try {
-      const url = `${ChromeForTestingAPI.API_BASE_URL}${ChromeForTestingAPI.VERSIONS_ENDPOINT}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: ChromeForTestingResponse = await response.json();
-      
-      // Transform API response to our BrowserVersion format
-      return data.versions.map(version => ({
-        kind: 'chromium' as const,
-        version: version.version,
-        revision: version.revision,
-        downloads: version.downloads
-      }));
+      const data = await this.operations.fetchVersions();
+      return transformApiResponse(data);
     } catch (error) {
       throw new Error(`Failed to fetch available versions: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -63,7 +56,7 @@ export class ChromeForTestingAPI {
     }
 
     const chromeDownloads = version.downloads.chrome || [];
-    const platformDownload = chromeDownloads.find(download => download.platform === platformInfo.platform);
+    const platformDownload = findPlatformDownload(chromeDownloads, platformInfo.platform);
     
     if (!platformDownload) {
       return {
@@ -75,21 +68,14 @@ export class ChromeForTestingAPI {
     const downloadUrl = platformDownload.url;
 
     try {
-      // Ensure destination directory exists
-      await mkdir(options.destinationDir, { recursive: true });
-      
       // Generate filename from URL
-      const filename = this.extractFilenameFromUrl(downloadUrl);
+      const filename = extractFilenameFromUrl(downloadUrl);
       const filePath = join(options.destinationDir, filename);
 
       // Start download with progress tracking
-      const result = await this.downloadFile(downloadUrl, filePath, options);
+      const result = await this.operations.downloadFile(downloadUrl, filePath, options);
       
-      return {
-        success: true,
-        filePath,
-        progress: result.progress
-      };
+      return result;
     } catch (error) {
       return {
         success: false,
@@ -98,108 +84,7 @@ export class ChromeForTestingAPI {
     }
   }
 
-  /**
-   * Download a file with progress tracking and error handling
-   * @private
-   */
-  private async downloadFile(
-    url: string, 
-    filePath: string, 
-    options: DownloadOptions
-  ): Promise<{ progress: DownloadProgress }> {
-    const timeout = options.timeout || 300000; // 5 minutes default
-    
-    // Create abort controller for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    try {
-      const response = await fetch(url, { signal: controller.signal });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const contentLength = response.headers.get('content-length');
-      const total = contentLength ? parseInt(contentLength, 10) : 0;
-      
-      let downloaded = 0;
-      const startTime = Date.now();
-
-      // Ensure directory exists
-      await mkdir(dirname(filePath), { recursive: true });
-      
-      // Create write stream
-      const writeStream = createWriteStream(filePath);
-      
-      // Track progress if we have content length and callback
-      if (total > 0 && options.onProgress) {
-        const reader = response.body?.getReader();
-        if (!reader) {
-          throw new Error('Response body is not readable');
-        }
-
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            downloaded += value.length;
-            const elapsed = Date.now() - startTime;
-            const speed = elapsed > 0 ? (downloaded / elapsed) * 1000 : 0;
-            const percentage = (downloaded / total) * 100;
-
-            const progress: DownloadProgress = {
-              total,
-              downloaded,
-              percentage,
-              speed
-            };
-
-            options.onProgress(progress);
-            writeStream.write(value);
-          }
-        } finally {
-          reader.releaseLock();
-        }
-        
-        writeStream.end();
-      } else {
-        // Simple download without progress tracking
-        if (!response.body) {
-          throw new Error('Response body is empty');
-        }
-        await pipeline(response.body as any, writeStream);
-        downloaded = total || 0;
-      }
-
-      const finalProgress: DownloadProgress = {
-        total: downloaded,
-        downloaded,
-        percentage: 100,
-        speed: 0
-      };
-
-      return { progress: finalProgress };
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
-
-  /**
-   * Extract filename from download URL
-   * @private
-   */
-  private extractFilenameFromUrl(url: string): string {
-    try {
-      const urlObj = new URL(url);
-      const pathname = urlObj.pathname;
-      const filename = pathname.split('/').pop();
-      return filename || 'chromium-download.zip';
-    } catch {
-      return 'chromium-download.zip';
-    }
-  }
 
   /**
    * Get the latest available version
@@ -207,28 +92,7 @@ export class ChromeForTestingAPI {
    */
   async getLatestVersion(): Promise<BrowserVersion | null> {
     const versions = await this.getAvailableVersions();
-    if (versions.length === 0) {
-      return null;
-    }
-
-    // Sort versions by version string (assuming semantic versioning)
-    const sortedVersions = versions.sort((a, b) => {
-      const aVersion = a.version.split('.').map(Number);
-      const bVersion = b.version.split('.').map(Number);
-      
-      for (let i = 0; i < Math.max(aVersion.length, bVersion.length); i++) {
-        const aPart = aVersion[i] || 0;
-        const bPart = bVersion[i] || 0;
-        
-        if (aPart !== bPart) {
-          return bPart - aPart; // Descending order
-        }
-      }
-      
-      return 0;
-    });
-
-    return sortedVersions[0];
+    return findLatestVersion(versions);
   }
 
   /**
@@ -238,6 +102,6 @@ export class ChromeForTestingAPI {
    */
   async findVersion(versionString: string): Promise<BrowserVersion | null> {
     const versions = await this.getAvailableVersions();
-    return versions.find(v => v.version === versionString) || null;
+    return findVersionByString(versions, versionString);
   }
 }
