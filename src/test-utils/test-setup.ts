@@ -1,6 +1,7 @@
 import { Browser } from 'puppeteer-core';
 import puppeteer from 'puppeteer-core';
 import { errorToString } from '../utils/error.js';
+import { findChromiumExecutable } from '../browser-discovery/index.js';
 
 /**
  * Per-file browser instance for tests
@@ -27,48 +28,7 @@ function shouldShowBrowser(): boolean {
 
 
 
-/**
- * Find the Chromium executable path using system commands
- */
-function findChromiumExecutable(): string {
-  const { execSync } = require('child_process');
 
-  const commands = [
-    'which chromium',
-    'which chromium-browser'
-  ];
-
-  for (const command of commands) {
-    try {
-      const result = execSync(command, { encoding: 'utf8', stdio: 'pipe' }).trim();
-      if (result) {
-        console.log(`Found browser executable: ${result}`);
-        return result;
-      }
-    } catch (err) {
-      console.warn(`findChromiumExecutable: probe failed for command '${command}': ${errorToString(err)}`);
-      continue;
-    }
-  }
-
-  // Fallback to common macOS paths
-  const macPaths = [
-    '/Applications/Chromium.app/Contents/MacOS/Chromium'
-  ];
-
-  for (const path of macPaths) {
-    try {
-      execSync(`test -f "${path}"`, { stdio: 'pipe' });
-      console.log(`Found browser executable: ${path}`);
-      return path;
-    } catch (err) {
-      console.warn(`findChromiumExecutable: path probe failed for '${path}': ${errorToString(err)}`);
-      continue;
-    }
-  }
-
-  throw new Error('No Chromium executable found. Please install Chromium: brew install chromium');
-}
 
 /**
  * Launch Chromium in headless mode for testing

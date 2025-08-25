@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Extract and refactor existing test utilities into shared modules
+- [x] 1. Extract and refactor existing test utilities into shared modules
   - Extract `findChromiumExecutable()` function from test utilities to shared `src/browser-discovery/` module
   - Create `BrowserInstallation` class with launch, verify, and getExecutableInfo methods
   - Add support for `DISABLE_LOCAL_CHROMIUM_DISCOVERY` environment variable in discovery logic
@@ -60,6 +60,9 @@
   - Add automatic connection to running Chromium instances with remote debugging
   - Implement fallback to managed Chromium installation when no running instance found
   - Add version requirement checking against chromium.version file during startup
+  - Refactor `test-setup.ts` to use `BrowserInstallation` class instead of direct puppeteer.launch calls
+  - Update `launchTestBrowser()` function to create BrowserInstallation instance and use its launch method
+  - Maintain test-specific configurations (SHOW_BROWSER, unique ports, test profiles) while using shared launch logic
   - Write integration tests for server startup with various browser availability scenarios
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
