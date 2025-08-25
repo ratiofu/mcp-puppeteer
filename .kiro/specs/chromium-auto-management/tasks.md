@@ -15,7 +15,7 @@
   - Write unit tests for browser discovery service with mocked file system operations
   - _Requirements: 1.1, 1.2, 4.5, 6.1, 6.6_
 
-- [ ] 3. Create Chrome for Testing API integration module
+- [x] 3. Create Chrome for Testing API integration module
   - Create `ChromeForTestingAPI` service to fetch available browser versions
   - Implement `getAvailableVersions()` method returning `BrowserVersion[]` with kind='chromium'
   - Add platform detection for macOS (mac_x64, mac_arm64) and Linux (linux64)
