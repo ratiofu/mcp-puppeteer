@@ -7,7 +7,7 @@
   - Write unit tests for extracted browser discovery functionality
   - _Requirements: 6.1, 6.2, 6.5, 6.6_
 
-- [ ] 2. Implement Browser Discovery Service with system and managed browser detection
+- [x] 2. Implement Browser Discovery Service with system and managed browser detection
   - Create `BrowserDiscoveryService` class that implements discovery interface
   - Implement `discoverBrowsers()` method to find all available Chromium installations
   - Implement `findBestBrowser()` method with version filtering and local discovery skip option

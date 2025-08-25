@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
 import { errorToString } from '../utils/error.js';
+import { isTruthy } from './envUtils.js';
 
 /**
  * Find the Chromium executable path using system commands
@@ -11,7 +12,7 @@ import { errorToString } from '../utils/error.js';
  */
 export function findChromiumExecutable(skipLocalDiscovery: boolean = false): string {
   // Check environment variable to disable local discovery
-  if (skipLocalDiscovery || process.env.DISABLE_LOCAL_CHROMIUM_DISCOVERY === '1') {
+  if (skipLocalDiscovery || isTruthy(process.env.DISABLE_LOCAL_CHROMIUM_DISCOVERY)) {
     throw new Error('Local Chromium discovery disabled by configuration');
   }
 
