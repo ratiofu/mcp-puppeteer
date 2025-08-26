@@ -1,0 +1,2 @@
+- recreate error-paths.test.ts or similar coverage improvements without mocking the entire setup
+- disallow `any` in biome and typescript and fix all remaining code issues

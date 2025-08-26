@@ -61,7 +61,7 @@ export const interactiveHtml = `
         }
     </script>
 </body>
-</html>`;
+</html>`
 
 /**
  * Second page for navigation testing
@@ -80,4 +80,4 @@ export const page2Html = `
         console.log('Page 2 loaded');
     </script>
 </body>
-</html>`;
+</html>`

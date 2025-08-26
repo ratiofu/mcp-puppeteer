@@ -3,8 +3,8 @@
  * Simple test doubles that avoid complex mocking
  */
 
-import type { ChromeForTestingOperations } from '../operations.js';
-import type { DownloadOptions, DownloadResult } from '../types.js';
+import type { ChromeForTestingOperations } from '../operations.js'
+import type { DownloadOptions, DownloadResult } from '../types.js'
 
 export class TestChromeForTestingOperations implements ChromeForTestingOperations {
   private versionsResponse: any = {
@@ -18,9 +18,9 @@ export class TestChromeForTestingOperations implements ChromeForTestingOperation
           chrome: [
             { platform: 'linux64', url: 'https://example.com/chrome-linux64.zip' },
             { platform: 'mac-x64', url: 'https://example.com/chrome-mac-x64.zip' },
-            { platform: 'mac-arm64', url: 'https://example.com/chrome-mac-arm64.zip' }
-          ]
-        }
+            { platform: 'mac-arm64', url: 'https://example.com/chrome-mac-arm64.zip' },
+          ],
+        },
       },
       {
         kind: 'chromium',
@@ -29,15 +29,15 @@ export class TestChromeForTestingOperations implements ChromeForTestingOperation
         downloads: {
           chrome: [
             { platform: 'linux64', url: 'https://example.com/chrome-linux64-121.zip' },
-            { platform: 'mac-x64', url: 'https://example.com/chrome-mac-x64-121.zip' }
-          ]
-        }
-      }
-    ]
-  };
+            { platform: 'mac-x64', url: 'https://example.com/chrome-mac-x64-121.zip' },
+          ],
+        },
+      },
+    ],
+  }
 
-  private shouldFailFetch = false;
-  private shouldFailDownload = false;
+  private shouldFailFetch = false
+  private shouldFailDownload = false
   private downloadResult: DownloadResult = {
     success: true,
     filePath: '',
@@ -45,41 +45,45 @@ export class TestChromeForTestingOperations implements ChromeForTestingOperation
       total: 1000,
       downloaded: 1000,
       percentage: 100,
-      speed: 0
-    }
-  };
+      speed: 0,
+    },
+  }
 
   // Test configuration methods
   setVersionsResponse(response: any): void {
-    this.versionsResponse = response;
+    this.versionsResponse = response
   }
 
   setShouldFailFetch(fail: boolean): void {
-    this.shouldFailFetch = fail;
+    this.shouldFailFetch = fail
   }
 
   setShouldFailDownload(fail: boolean): void {
-    this.shouldFailDownload = fail;
+    this.shouldFailDownload = fail
   }
 
   setDownloadResult(result: DownloadResult): void {
-    this.downloadResult = result;
+    this.downloadResult = result
   }
 
   // Implementation
   async fetchVersions(): Promise<any> {
     if (this.shouldFailFetch) {
-      throw new Error('Test fetch failure');
+      throw new Error('Test fetch failure')
     }
-    return this.versionsResponse;
+    return this.versionsResponse
   }
 
-  async downloadFile(url: string, filePath: string, options: DownloadOptions): Promise<DownloadResult> {
+  async downloadFile(
+    _url: string,
+    filePath: string,
+    options: DownloadOptions,
+  ): Promise<DownloadResult> {
     if (this.shouldFailDownload) {
       return {
         success: false,
-        error: 'Test download failure'
-      };
+        error: 'Test download failure',
+      }
     }
 
     // Simulate progress callback if provided
@@ -88,18 +92,18 @@ export class TestChromeForTestingOperations implements ChromeForTestingOperation
         total: 1000,
         downloaded: 500,
         percentage: 50,
-        speed: 1000
-      });
-      options.onProgress(this.downloadResult.progress);
+        speed: 1000,
+      })
+      options.onProgress(this.downloadResult.progress)
     }
 
     return {
       ...this.downloadResult,
-      filePath
-    };
+      filePath,
+    }
   }
 
-  async ensureDirectory(path: string): Promise<void> {
+  async ensureDirectory(_path: string): Promise<void> {
     // No-op for tests
   }
 }

@@ -5,9 +5,9 @@
  */
 export interface ServerConfig {
   /** Unique identifier for the server session */
-  sessionId: string;
+  sessionId: string
   /** Chromium remote debugging port */
-  chromiumDebugPort?: number;
+  chromiumDebugPort?: number
 }
 
 /**
@@ -15,9 +15,10 @@ export interface ServerConfig {
  */
 export interface BrowserConnectionConfig {
   /** URL for connecting to Chromium remote debugging */
-  browserURL: string;
+  // biome-ignore lint/style/useNamingConvention: that's what Chrome expects
+  browserURL: string
   /** Default viewport settings */
-  defaultViewport: null | { width: number; height: number };
+  defaultViewport: null | { width: number; height: number }
 }
 
 /**
@@ -25,11 +26,11 @@ export interface BrowserConnectionConfig {
  */
 export interface ServerStartupResult {
   /** Whether the server started successfully */
-  success: boolean;
+  success: boolean
   /** Error message if startup failed */
-  error?: string;
+  error?: string
   /** Server session ID if successful */
-  sessionId?: string;
+  sessionId?: string
 }
 
 /**
@@ -37,49 +38,51 @@ export interface ServerStartupResult {
  */
 export interface BrowserInitResult {
   /** Whether browser connection was successful */
-  success: boolean;
+  success: boolean
   /** Error message if connection failed */
-  error?: string;
+  error?: string
   /** Browser instance if successful */
-  browser?: import('puppeteer-core').Browser;
+  browser?: import('puppeteer-core').Browser
 }
 
 /**
  * Process signal types for graceful shutdown
  */
-export type ProcessSignal = 'SIGINT' | 'SIGTERM';
+export type ProcessSignal = 'SIGINT' | 'SIGTERM'
 
 /**
  * Server lifecycle events
  */
 export interface ServerLifecycleEvents {
   /** Called when server starts successfully */
-  onStart?: (sessionId: string) => void;
+  onStart?: (sessionId: string) => void
   /** Called when server receives shutdown signal */
-  onShutdown?: (signal: ProcessSignal) => void;
+  onShutdown?: (signal: ProcessSignal) => void
   /** Called when transport closes */
-  onTransportClose?: () => void;
+  onTransportClose?: () => void
   /** Called when server encounters an error */
-  onError?: (error: Error) => void;
+  onError?: (error: Error) => void
 }
 
 /**
  * Default configuration values
  */
 export const DEFAULT_CONFIG = {
-  CHROMIUM_DEBUG_PORT: 9222,
-  SESSION_ID: 'pipe-session',
-  BROWSER_URL: 'http://localhost:9222'
-} as const;
+  chromiumDebugPort: 9222,
+  sessionId: 'pipe-session',
+  // biome-ignore lint/style/useNamingConvention: that's what Chrome expects
+  browserURL: 'http://localhost:9222',
+} as const
 
 /**
  * Error messages for internal operations
  */
 export const INTERNAL_ERROR_MESSAGES = {
-  CHROMIUM_CONNECTION_FAILED: 'Failed to connect to Chromium. Make sure Chromium is running with remote debugging enabled.',
-  CHROMIUM_LAUNCH_INSTRUCTION: 'Launch Chromium with: chromium --remote-debugging-port=9222',
-  SERVER_STARTUP_FAILED: 'Error starting server',
-  UNHANDLED_ERROR: 'Unhandled error',
-  BROWSER_INIT_FAILED: 'Browser initialization failed',
-  TRANSPORT_SETUP_FAILED: 'Transport setup failed'
-} as const;
+  chromiumConnectionFailed:
+    'Failed to connect to Chromium. Make sure Chromium is running with remote debugging enabled.',
+  chromiumLaunchInstructions: 'Launch Chromium with: chromium --remote-debugging-port=9222',
+  serverStartupFailed: 'Error starting server',
+  unhandledError: 'Unhandled error',
+  browserInitFailed: 'Browser initialization failed',
+  transportSetupFailed: 'Transport setup failed',
+} as const

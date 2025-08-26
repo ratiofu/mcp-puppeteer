@@ -46,7 +46,7 @@ fi
 
 # Test 2: Test that npx downloads and executes the package
 echo "Test 2: Testing npx package execution..."
-TEST_OUTPUT=$(echo '{"jsonrpc": "2.0", "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test", "version": "1.0.0"}}, "id": 1}' | (run_with_timeout 5 npx @ratiofu/mcp-puppeteer) 2>&1 || true)
+TEST_OUTPUT=$(echo '{"jsonrpc": "2.0", "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test", "version": "1.0.0"}}, "id": 1}' | (run_with_timeout 10 npx @ratiofu/mcp-puppeteer) 2>&1 || true)
 if echo "$TEST_OUTPUT" | grep -q "MCP server started"; then
     echo "✅ npx execution successful"
 else

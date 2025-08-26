@@ -7,9 +7,9 @@
  */
 export interface PlatformDownload {
   /** Platform identifier */
-  platform: string;
+  platform: string
   /** Download URL */
-  url: string;
+  url: string
 }
 
 /**
@@ -17,17 +17,17 @@ export interface PlatformDownload {
  */
 export interface BrowserVersion {
   /** Browser type - currently only 'chromium' is supported */
-  kind: 'chromium';
+  kind: 'chromium'
   /** Version string (e.g., "120.0.6099.109") */
-  version: string;
+  version: string
   /** Revision number */
-  revision: string;
+  revision: string
   /** Download URLs for different platforms */
   downloads: {
-    chrome?: PlatformDownload[];
-    chromedriver?: PlatformDownload[];
-    'chrome-headless-shell'?: PlatformDownload[];
-  };
+    chrome?: PlatformDownload[]
+    chromedriver?: PlatformDownload[]
+    'chrome-headless-shell'?: PlatformDownload[]
+  }
 }
 
 /**
@@ -35,13 +35,13 @@ export interface BrowserVersion {
  */
 export interface DownloadProgress {
   /** Total bytes to download */
-  total: number;
+  total: number
   /** Bytes downloaded so far */
-  downloaded: number;
+  downloaded: number
   /** Download percentage (0-100) */
-  percentage: number;
+  percentage: number
   /** Download speed in bytes per second */
-  speed: number;
+  speed: number
 }
 
 /**
@@ -49,13 +49,13 @@ export interface DownloadProgress {
  */
 export interface DownloadResult {
   /** Whether download was successful */
-  success: boolean;
+  success: boolean
   /** Path to downloaded file if successful */
-  filePath?: string;
+  filePath?: string
   /** Error message if download failed */
-  error?: string;
+  error?: string
   /** Final download progress */
-  progress?: DownloadProgress;
+  progress?: DownloadProgress
 }
 
 /**
@@ -63,9 +63,9 @@ export interface DownloadResult {
  */
 export interface ChromeForTestingResponse {
   /** Timestamp of the API response */
-  timestamp: string;
+  timestamp: string
   /** Available browser versions */
-  versions: BrowserVersion[];
+  versions: BrowserVersion[]
 }
 
 /**
@@ -73,9 +73,9 @@ export interface ChromeForTestingResponse {
  */
 export interface DownloadOptions {
   /** Destination directory for download */
-  destinationDir: string;
+  destinationDir: string
   /** Optional progress callback */
-  onProgress?: (progress: DownloadProgress) => void;
+  onProgress?: (progress: DownloadProgress) => void
   /** Timeout in milliseconds (default: 300000 = 5 minutes) */
-  timeout?: number;
+  timeout?: number
 }

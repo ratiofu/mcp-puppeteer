@@ -1,82 +1,86 @@
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { Browser } from 'puppeteer-core';
-import { PuppeteerMcpServer } from '../PuppeteerMcpServer.js';
-import { TestTransport, createTransportPair } from './TestTransport.js';
-import { 
-  type ToolName,
-  type ToolRequestMap,
-  type ToolResponseMap,
-  type NavigateRequest,
-  type NavigateResponse,
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
+import type { JSONRPCMessage, ListToolsResult } from '@modelcontextprotocol/sdk/types.js'
+import type { Browser } from 'puppeteer-core'
+import { PuppeteerMcpServer } from '../PuppeteerMcpServer.js'
+import {
   type ClickRequest,
   type ClickResponse,
+  type EmptyRequest,
   type GetConsoleRequest,
   type GetConsoleResponse,
-  type ScreenshotResponse,
   type GetHtmlResponse,
   type ListTabUrlsResponse,
-  type EmptyRequest,
-  TOOL_NAMES
-} from '../types/api.js';
-import type { CallToolResult, ListToolsResult } from '@modelcontextprotocol/sdk/types.js';
-import { errorToString } from '../utils/error.js';
+  type NavigateRequest,
+  type NavigateResponse,
+  type ScreenshotResponse,
+  type ToolName,
+  ToolNames,
+  type ToolRequestMap,
+  type ToolResponseMap,
+} from '../types/api.js'
+import { errorToString } from '../utils/error.js'
+import { createTransportPair, type TestTransport } from './TestTransport.js'
 
 /**
  * Test client wrapper for MCP communication using the official MCP SDK client
  * Provides type-safe tool calling methods and proper test lifecycle management
  */
 export class McpTestClient {
-  private client: Client;
-  private server: PuppeteerMcpServer;
-  private clientTransport: TestTransport;
-  private serverTransport: TestTransport;
-  private initialized: boolean = false;
-  private readonly sessionId: string;
+  private client: Client
+  private server: PuppeteerMcpServer
+  private clientTransport: TestTransport
+  private serverTransport: TestTransport
+  private initialized = false
+  private readonly sessionId: string
 
   constructor(sessionId: string, browser: Browser) {
-    this.sessionId = sessionId;
-    
+    this.sessionId = sessionId
+
     // Create connected transport pair for client-server communication
-    const { clientTransport, serverTransport } = createTransportPair(sessionId);
-    this.clientTransport = clientTransport;
-    this.serverTransport = serverTransport;
+    const { clientTransport, serverTransport } = createTransportPair(sessionId)
+    this.clientTransport = clientTransport
+    this.serverTransport = serverTransport
 
     // Initialize MCP client with proper capabilities
-    this.client = new Client({
-      name: 'mcp-test-client',
-      version: '1.0.0'
-    }, {
-      capabilities: {
-        tools: {}
-      }
-    });
+    this.client = new Client(
+      {
+        name: 'mcp-test-client',
+        version: '1.0.0',
+      },
+      {
+        capabilities: {
+          tools: {},
+        },
+      },
+    )
 
     // Initialize MCP server
-    this.server = new PuppeteerMcpServer(sessionId, browser);
+    this.server = new PuppeteerMcpServer(sessionId, browser)
   }
 
   /**
    * Initialize the client-server connection and start communication
    * Must be called before using any tool methods
    */
-  async initialize(): Promise<void> {
+  async initialize(): Promise<McpTestClient> {
     if (this.initialized) {
-      return;
+      return this
     }
 
     try {
       // Start transports
-      await this.clientTransport.start();
-      await this.serverTransport.start();
+      await this.clientTransport.start()
+      await this.serverTransport.start()
 
       // Connect client and server to their respective transports
-      await this.client.connect(this.clientTransport);
-      await this.server.connect(this.serverTransport);
+      await this.client.connect(this.clientTransport)
+      await this.server.connect(this.serverTransport)
 
-      this.initialized = true;
+      this.initialized = true
     } catch (error) {
-      throw new Error(`Failed to initialize MCP test client: ${errorToString(error)}`);
+      throw new Error(`Failed to initialize MCP test client: ${errorToString(error)}`)
     }
+    return this
   }
 
   /**
@@ -86,22 +90,22 @@ export class McpTestClient {
    * @returns Promise resolving to the tool's response
    */
   async callTool<T extends ToolName>(
-    toolName: T, 
-    parameters: ToolRequestMap[T]
+    toolName: T,
+    parameters: ToolRequestMap[T],
   ): Promise<ToolResponseMap[T]> {
     if (!this.initialized) {
-      throw new Error('Client not initialized. Call initialize() first.');
+      throw new Error('Client not initialized. Call initialize() first.')
     }
 
     try {
       const result = await this.client.callTool({
         name: toolName,
-        arguments: parameters as Record<string, unknown>
-      });
+        arguments: parameters as Record<string, unknown>,
+      })
 
-      return result as ToolResponseMap[T];
+      return result as ToolResponseMap[T]
     } catch (error) {
-      throw new Error(`Tool call failed for ${toolName}: ${errorToString(error)}`);
+      throw new Error(`Tool call failed for ${toolName}: ${errorToString(error)}`)
     }
   }
 
@@ -111,7 +115,7 @@ export class McpTestClient {
    * @returns Promise resolving to navigation response
    */
   async navigate(url: string): Promise<NavigateResponse> {
-    return this.callTool(TOOL_NAMES.NAVIGATE, { url } as NavigateRequest);
+    return this.callTool(ToolNames.navigate, { url } as NavigateRequest)
   }
 
   /**
@@ -120,7 +124,7 @@ export class McpTestClient {
    * @returns Promise resolving to click response
    */
   async click(selector: string): Promise<ClickResponse> {
-    return this.callTool(TOOL_NAMES.CLICK, { selector } as ClickRequest);
+    return this.callTool(ToolNames.click, { selector } as ClickRequest)
   }
 
   /**
@@ -128,7 +132,7 @@ export class McpTestClient {
    * @returns Promise resolving to screenshot response with base64 image data
    */
   async takeScreenshot(): Promise<ScreenshotResponse> {
-    return this.callTool(TOOL_NAMES.TAKE_SCREENSHOT, {} as EmptyRequest);
+    return this.callTool(ToolNames.takeScreenshot, {} as EmptyRequest)
   }
 
   /**
@@ -136,7 +140,7 @@ export class McpTestClient {
    * @returns Promise resolving to HTML content response
    */
   async getHtml(): Promise<GetHtmlResponse> {
-    return this.callTool(TOOL_NAMES.GET_HTML, {} as EmptyRequest);
+    return this.callTool(ToolNames.getHtml, {} as EmptyRequest)
   }
 
   /**
@@ -144,8 +148,8 @@ export class McpTestClient {
    * @param clear Whether to clear console logs after retrieving them
    * @returns Promise resolving to console output response
    */
-  async getConsole(clear: boolean = false): Promise<GetConsoleResponse> {
-    return this.callTool(TOOL_NAMES.GET_CONSOLE, { clear } as GetConsoleRequest);
+  async getConsole(clear = false): Promise<GetConsoleResponse> {
+    return this.callTool(ToolNames.getConsole, { clear } as GetConsoleRequest)
   }
 
   /**
@@ -153,7 +157,7 @@ export class McpTestClient {
    * @returns Promise resolving to tab URLs response
    */
   async listTabUrls(): Promise<ListTabUrlsResponse> {
-    return this.callTool(TOOL_NAMES.LIST_TAB_URLS, {} as EmptyRequest);
+    return this.callTool(ToolNames.listTabUrls, {} as EmptyRequest)
   }
 
   /**
@@ -162,13 +166,13 @@ export class McpTestClient {
    */
   async listTools(): Promise<ListToolsResult> {
     if (!this.initialized) {
-      throw new Error('Client not initialized. Call initialize() first.');
+      throw new Error('Client not initialized. Call initialize() first.')
     }
 
     try {
-      return await this.client.listTools();
+      return await this.client.listTools()
     } catch (error) {
-      throw new Error(`Failed to list tools: ${errorToString(error)}`);
+      throw new Error(`Failed to list tools: ${errorToString(error)}`)
     }
   }
 
@@ -177,7 +181,7 @@ export class McpTestClient {
    * @returns The session ID string
    */
   getSessionId(): string {
-    return this.sessionId;
+    return this.sessionId
   }
 
   /**
@@ -185,7 +189,7 @@ export class McpTestClient {
    * @returns The PuppeteerMcpServer instance
    */
   getServer(): PuppeteerMcpServer {
-    return this.server;
+    return this.server
   }
 
   /**
@@ -193,7 +197,7 @@ export class McpTestClient {
    * @returns True if initialized, false otherwise
    */
   isInitialized(): boolean {
-    return this.initialized;
+    return this.initialized
   }
 
   /**
@@ -201,21 +205,21 @@ export class McpTestClient {
    * @returns Object containing client-to-server and server-to-client message arrays
    */
   getMessageHistory(): {
-    clientToServer: any[];
-    serverToClient: any[];
+    clientToServer: JSONRPCMessage[]
+    serverToClient: JSONRPCMessage[]
   } {
     return {
       clientToServer: this.clientTransport.getClientToServerMessages(),
-      serverToClient: this.clientTransport.getServerToClientMessages()
-    };
+      serverToClient: this.clientTransport.getServerToClientMessages(),
+    }
   }
 
   /**
    * Clear message history from the transport
    */
   clearMessageHistory(): void {
-    this.clientTransport.clearMessageHistory();
-    this.serverTransport.clearMessageHistory();
+    this.clientTransport.clearMessageHistory()
+    this.serverTransport.clearMessageHistory()
   }
 
   /**
@@ -224,25 +228,25 @@ export class McpTestClient {
    */
   async disconnect(): Promise<void> {
     if (!this.initialized) {
-      return;
+      return
     }
 
     try {
       // Disconnect server first to clean up browser resources
-      await this.server.disconnect();
-      
+      await this.server.disconnect()
+
       // Close client connection
-      await this.client.close();
-      
+      await this.client.close()
+
       // Close transports
-      await this.clientTransport.close();
-      await this.serverTransport.close();
-      
-      this.initialized = false;
+      await this.clientTransport.close()
+      await this.serverTransport.close()
+
+      this.initialized = false
     } catch (error) {
-      console.error(`Error during McpTestClient disconnect: ${errorToString(error)}`);
+      console.error(`Error during McpTestClient disconnect: ${errorToString(error)}`)
       // Still mark as not initialized even if cleanup failed; do not throw to avoid masking tests
-      this.initialized = false;
+      this.initialized = false
     }
   }
 }
@@ -253,8 +257,11 @@ export class McpTestClient {
  * @param browser Browser instance to use for the server
  * @returns Promise resolving to initialized McpTestClient
  */
-export async function createMcpTestClient(sessionId: string, browser: Browser): Promise<McpTestClient> {
-  const client = new McpTestClient(sessionId, browser);
-  await client.initialize();
-  return client;
+export async function createMcpTestClient(
+  sessionId: string,
+  browser: Browser,
+): Promise<McpTestClient> {
+  const client = new McpTestClient(sessionId, browser)
+  await client.initialize()
+  return client
 }

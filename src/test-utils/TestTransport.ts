@@ -1,27 +1,28 @@
-import type { Transport, TransportSendOptions } from '@modelcontextprotocol/sdk/shared/transport.js';
-import type { JSONRPCMessage, MessageExtraInfo } from '@modelcontextprotocol/sdk/types.js';
+import type { Transport, TransportSendOptions } from '@modelcontextprotocol/sdk/shared/transport.js'
+import type { JSONRPCMessage, MessageExtraInfo } from '@modelcontextprotocol/sdk/types.js'
 
 /**
  * In-memory transport for testing MCP communication
  * Provides bidirectional message routing between client and server instances
  */
 export class TestTransport implements Transport {
-  private serverToClientMessages: JSONRPCMessage[] = [];
-  private clientToServerMessages: JSONRPCMessage[] = [];
-  private isServerSide: boolean;
-  private closed: boolean = false;
-  private connectedTransport?: TestTransport;
-  private started: boolean = false;
+  private serverToClientMessages: JSONRPCMessage[] = []
+  private clientToServerMessages: JSONRPCMessage[] = []
+  private isServerSide: boolean
+  private closed = false
+  private connectedTransport?: TestTransport
+  private started = false
 
   // Transport interface properties
-  public sessionId?: string;
-  public onclose?: () => void;
-  public onerror?: (error: Error) => void;
-  public onmessage?: (message: JSONRPCMessage, extra?: MessageExtraInfo) => void;
+  public sessionId?: string
+  public onclose?: () => void
+  public onerror?: (error: Error) => void
+  public onmessage?: (message: JSONRPCMessage, extra?: MessageExtraInfo) => void
 
-  constructor(isServerSide: boolean = false, sessionId?: string) {
-    this.isServerSide = isServerSide;
-    this.sessionId = sessionId || `test-session-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+  constructor(isServerSide = false, sessionId?: string) {
+    this.isServerSide = isServerSide
+    this.sessionId =
+      sessionId || `test-session-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
   }
 
   /**
@@ -29,8 +30,8 @@ export class TestTransport implements Transport {
    * @param otherTransport The transport to connect to
    */
   connect(otherTransport: TestTransport): void {
-    this.connectedTransport = otherTransport;
-    otherTransport.connectedTransport = this;
+    this.connectedTransport = otherTransport
+    otherTransport.connectedTransport = this
   }
 
   /**
@@ -38,50 +39,50 @@ export class TestTransport implements Transport {
    */
   async start(): Promise<void> {
     if (this.started) {
-      return;
+      return
     }
-    this.started = true;
+    this.started = true
   }
 
   /**
    * Send a message through the transport
    * Messages are routed to the connected transport's message handler
    */
-  async send(message: JSONRPCMessage, options?: TransportSendOptions): Promise<void> {
+  async send(message: JSONRPCMessage, _options?: TransportSendOptions): Promise<void> {
     if (this.closed) {
-      throw new Error('Transport is closed');
+      throw new Error('Transport is closed')
     }
 
     if (!this.started) {
-      throw new Error('Transport not started');
+      throw new Error('Transport not started')
     }
 
     if (!this.connectedTransport) {
-      throw new Error('Transport not connected to another transport');
+      throw new Error('Transport not connected to another transport')
     }
 
     // Route message to the connected transport
     if (this.isServerSide) {
       // Server sending to client
-      this.connectedTransport.serverToClientMessages.push(message);
+      this.connectedTransport.serverToClientMessages.push(message)
       if (this.connectedTransport.onmessage) {
         // Deliver message asynchronously to simulate real transport behavior
         setImmediate(() => {
           if (this.connectedTransport?.onmessage && !this.closed) {
-            this.connectedTransport.onmessage(message);
+            this.connectedTransport.onmessage(message)
           }
-        });
+        })
       }
     } else {
       // Client sending to server
-      this.connectedTransport.clientToServerMessages.push(message);
+      this.connectedTransport.clientToServerMessages.push(message)
       if (this.connectedTransport.onmessage) {
         // Deliver message asynchronously to simulate real transport behavior
         setImmediate(() => {
           if (this.connectedTransport?.onmessage && !this.closed) {
-            this.connectedTransport.onmessage(message);
+            this.connectedTransport.onmessage(message)
           }
-        });
+        })
       }
     }
   }
@@ -89,7 +90,7 @@ export class TestTransport implements Transport {
   /**
    * Set the protocol version (required by Transport interface)
    */
-  setProtocolVersion?(version: string): void {
+  setProtocolVersion?(_version: string): void {
     // No-op for test transport
   }
 
@@ -98,28 +99,28 @@ export class TestTransport implements Transport {
    */
   async close(): Promise<void> {
     if (this.closed) {
-      return;
+      return
     }
 
-    this.closed = true;
-    this.started = false;
-    
+    this.closed = true
+    this.started = false
+
     // Call onclose callback if set
     if (this.onclose) {
-      this.onclose();
+      this.onclose()
     }
-    
+
     // Clear message handlers
-    this.onmessage = undefined;
-    
+    this.onmessage = undefined
+
     // Clear message queues
-    this.serverToClientMessages.length = 0;
-    this.clientToServerMessages.length = 0;
-    
+    this.serverToClientMessages.length = 0
+    this.clientToServerMessages.length = 0
+
     // Disconnect from connected transport
     if (this.connectedTransport) {
-      this.connectedTransport.connectedTransport = undefined;
-      this.connectedTransport = undefined;
+      this.connectedTransport.connectedTransport = undefined
+      this.connectedTransport = undefined
     }
   }
 
@@ -127,29 +128,29 @@ export class TestTransport implements Transport {
    * Check if the transport is closed
    */
   get isClosed(): boolean {
-    return this.closed;
+    return this.closed
   }
 
   /**
    * Get all messages sent from server to client (for testing purposes)
    */
   getServerToClientMessages(): JSONRPCMessage[] {
-    return [...this.serverToClientMessages];
+    return [...this.serverToClientMessages]
   }
 
   /**
    * Get all messages sent from client to server (for testing purposes)
    */
   getClientToServerMessages(): JSONRPCMessage[] {
-    return [...this.clientToServerMessages];
+    return [...this.clientToServerMessages]
   }
 
   /**
    * Clear all message history (for testing purposes)
    */
   clearMessageHistory(): void {
-    this.serverToClientMessages.length = 0;
-    this.clientToServerMessages.length = 0;
+    this.serverToClientMessages.length = 0
+    this.clientToServerMessages.length = 0
   }
 }
 
@@ -158,11 +159,14 @@ export class TestTransport implements Transport {
  * @param sessionId Optional session ID for the transports
  * @returns Object containing client and server transport instances
  */
-export function createTransportPair(sessionId?: string): { clientTransport: TestTransport; serverTransport: TestTransport } {
-  const clientTransport = new TestTransport(false, sessionId);
-  const serverTransport = new TestTransport(true, sessionId);
-  
-  clientTransport.connect(serverTransport);
-  
-  return { clientTransport, serverTransport };
+export function createTransportPair(sessionId?: string): {
+  clientTransport: TestTransport
+  serverTransport: TestTransport
+} {
+  const clientTransport = new TestTransport(false, sessionId)
+  const serverTransport = new TestTransport(true, sessionId)
+
+  clientTransport.connect(serverTransport)
+
+  return { clientTransport, serverTransport }
 }

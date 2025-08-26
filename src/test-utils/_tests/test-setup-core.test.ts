@@ -1,141 +1,141 @@
-import { describe, it, expect, afterEach, vi } from 'vitest';
-import { Page } from 'puppeteer-core';
+import type { Page } from 'puppeteer-core'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
-  getTestBrowser,
-  isTestBrowserAvailable,
+  cleanupTestBrowser,
   createTestPage,
+  getTestBrowser,
   handleBrowserConnectionError,
+  isTestBrowserAvailable,
   setupTests,
   teardownTests,
-  cleanupTestBrowser
-} from '../index.js';
+} from '../index.js'
 
 describe('Test Setup - Core Functions', () => {
-  let testPage: Page | null = null;
+  let testPage: Page | null = null
 
   afterEach(async () => {
     // Clean up test page after each test
     if (testPage && !testPage.isClosed()) {
-      await testPage.close();
-      testPage = null;
+      await testPage.close()
+      testPage = null
     }
-  });
+  })
 
   describe('getTestBrowser', () => {
     it('should return a connected browser instance', async () => {
-      const browser = await getTestBrowser();
+      const browser = await getTestBrowser()
 
-      expect(browser).toBeDefined();
-      expect(browser.connected).toBe(true);
-    });
+      expect(browser).toBeDefined()
+      expect(browser.connected).toBe(true)
+    })
 
     it('should return the same browser instance on multiple calls', async () => {
-      const browser1 = await getTestBrowser();
-      const browser2 = await getTestBrowser();
+      const browser1 = await getTestBrowser()
+      const browser2 = await getTestBrowser()
 
-      expect(browser1).toBe(browser2);
-    });
-  });
+      expect(browser1).toBe(browser2)
+    })
+  })
 
   describe('isTestBrowserAvailable', () => {
     it('should return true when browser is available', async () => {
       // Ensure browser is initialized
-      await getTestBrowser();
+      await getTestBrowser()
 
-      expect(isTestBrowserAvailable()).toBe(true);
-    });
-  });
+      expect(isTestBrowserAvailable()).toBe(true)
+    })
+  })
 
   describe('createTestPage', () => {
     it('should create a new browser page', async () => {
-      testPage = await createTestPage('test-page-creation');
+      testPage = await createTestPage('test-page-creation')
 
-      expect(testPage).toBeDefined();
-      expect(testPage.isClosed()).toBe(false);
-    });
+      expect(testPage).toBeDefined()
+      expect(testPage.isClosed()).toBe(false)
+    })
 
     it('should create isolated pages for different tests', async () => {
-      const page1 = await createTestPage('test-isolation-1');
-      const page2 = await createTestPage('test-isolation-2');
+      const page1 = await createTestPage('test-isolation-1')
+      const page2 = await createTestPage('test-isolation-2')
 
-      expect(page1).not.toBe(page2);
-      expect(page1.isClosed()).toBe(false);
-      expect(page2.isClosed()).toBe(false);
+      expect(page1).not.toBe(page2)
+      expect(page1.isClosed()).toBe(false)
+      expect(page2.isClosed()).toBe(false)
 
       // Clean up both pages
-      await page1.close();
-      await page2.close();
-    });
+      await page1.close()
+      await page2.close()
+    })
 
     it('should set custom user agent with test name', async () => {
-      const testName = 'user-agent-test';
-      testPage = await createTestPage(testName);
+      const testName = 'user-agent-test'
+      testPage = await createTestPage(testName)
 
-      const userAgent = await testPage.evaluate(() => navigator.userAgent);
-      expect(userAgent).toContain(`Test-Agent-${testName}`);
-    });
-  });
+      const userAgent = await testPage.evaluate(() => navigator.userAgent)
+      expect(userAgent).toContain(`Test-Agent-${testName}`)
+    })
+  })
 
   describe('error handling', () => {
     it('should provide helpful error messages for browser connection failures', () => {
-      const testError = new Error('Connection refused');
+      const testError = new Error('Connection refused')
 
       expect(() => {
-        handleBrowserConnectionError(testError, 'test operation');
-      }).toThrow('test operation failed: Connection refused');
-    });
+        handleBrowserConnectionError(testError, 'test operation')
+      }).toThrow('test operation failed: Connection refused')
+    })
 
     it('should handle non-Error objects', () => {
-      const testError = 'String error message';
+      const testError = 'String error message'
 
       expect(() => {
-        handleBrowserConnectionError(testError, 'test operation');
-      }).toThrow('test operation failed: String error message');
-    });
-  });
+        handleBrowserConnectionError(testError, 'test operation')
+      }).toThrow('test operation failed: String error message')
+    })
+  })
 
   describe('browser lifecycle', () => {
     it('should maintain browser connection throughout test execution', async () => {
-      const browser = await getTestBrowser();
+      const browser = await getTestBrowser()
 
       // Create and use a page
-      testPage = await createTestPage('lifecycle-test');
-      await testPage.goto('data:text/html,<h1>Test Page</h1>');
+      testPage = await createTestPage('lifecycle-test')
+      await testPage.goto('data:text/html,<h1>Test Page</h1>')
 
-      const title = await testPage.evaluate(() => document.querySelector('h1')?.textContent);
-      expect(title).toBe('Test Page');
+      const title = await testPage.evaluate(() => document.querySelector('h1')?.textContent)
+      expect(title).toBe('Test Page')
 
       // Browser should still be connected
-      expect(browser.connected).toBe(true);
-    });
-  });
+      expect(browser.connected).toBe(true)
+    })
+  })
 
   describe('setup and teardown functions', () => {
     it('should successfully setup tests', async () => {
-      await expect(setupTests()).resolves.toBeUndefined();
-      expect(isTestBrowserAvailable()).toBe(true);
-    });
+      await expect(setupTests()).resolves.toBeUndefined()
+      expect(isTestBrowserAvailable()).toBe(true)
+    })
 
     it('should handle teardown when browser is already closed', async () => {
       // This should not throw even if browser is not running
-      await expect(teardownTests()).resolves.toBeUndefined();
-    });
-  });
+      await expect(teardownTests()).resolves.toBeUndefined()
+    })
+  })
 
   describe('browser disconnection handling', () => {
     it('should handle unexpected browser disconnection', async () => {
-      const browser = await getTestBrowser();
-      expect(browser.connected).toBe(true);
+      const browser = await getTestBrowser()
+      expect(browser.connected).toBe(true)
 
       // Simulate browser disconnection
-      (browser as any).emit('disconnected', {});
+      ;(browser as any).emit('disconnected', {})
 
       // After disconnection, isTestBrowserAvailable should return false
       // Note: There might be a small delay for the event to be processed
-      await new Promise(resolve => setTimeout(resolve, 10));
-      expect(isTestBrowserAvailable()).toBe(false);
-    });
-  });
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      expect(isTestBrowserAvailable()).toBe(false)
+    })
+  })
 
   describe('browser executable finding', () => {
     it('should handle browser launch failures gracefully', async () => {
@@ -143,36 +143,36 @@ describe('Test Setup - Core Functions', () => {
       // We can't easily mock puppeteer.launch due to TypeScript constraints,
       // but the error handling path is covered by other error scenarios
       // and the actual browser launch success is tested throughout the suite
-      expect(true).toBe(true); // Placeholder test
-    });
-  });
+      expect(true).toBe(true) // Placeholder test
+    })
+  })
 
   describe('edge cases', () => {
     it('should handle browser availability when browser is null', () => {
       // This tests the case where sharedBrowser is null
       // We can't easily set it to null from outside, but we can test after cleanup
-      expect(typeof isTestBrowserAvailable()).toBe('boolean');
-    });
+      expect(typeof isTestBrowserAvailable()).toBe('boolean')
+    })
 
     it('should handle page close errors during cleanup', async () => {
-      const browser = await getTestBrowser();
-      testPage = await createTestPage('cleanup-error-test');
+      const _browser = await getTestBrowser()
+      testPage = await createTestPage('cleanup-error-test')
 
       // Mock page.close to throw an error
-      const originalClose = testPage.close;
-      testPage.close = vi.fn().mockRejectedValue(new Error('Close failed'));
+      const originalClose = testPage.close
+      testPage.close = vi.fn().mockRejectedValue(new Error('Close failed'))
 
       try {
         // Cleanup should still succeed even if page close fails
-        await expect(cleanupTestBrowser()).resolves.toBeUndefined();
+        await expect(cleanupTestBrowser()).resolves.toBeUndefined()
       } finally {
         // Restore original method and manually close
-        testPage.close = originalClose;
+        testPage.close = originalClose
         if (!testPage.isClosed()) {
-          await testPage.close();
+          await testPage.close()
         }
-        testPage = null;
+        testPage = null
       }
-    });
-  });
-});
+    })
+  })
+})

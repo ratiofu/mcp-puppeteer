@@ -1,48 +1,41 @@
-import { Browser } from 'puppeteer-core';
-import puppeteer from 'puppeteer-core';
-import { errorToString } from '../utils/error.js';
-import { findChromiumExecutable } from '../browser-discovery/index.js';
+import puppeteer, { type Browser } from 'puppeteer-core'
+import { findChromiumExecutable } from '../browser-discovery/index.js'
+import { errorToString } from '../utils/error.js'
 
 /**
  * Per-file browser instance for tests
  * Each test file gets its own browser instance to support parallel execution
  */
 // Shared browser per Vitest worker
-let sharedBrowser: Browser | null = null;
+let sharedBrowser: Browser | null = null
 
 /**
  * Track whether we launched the browser ourselves (for cleanup purposes)
  */
 // Track whether we launched the shared browser
-let sharedLaunched = false;
-
-
+let _sharedLaunched = false
 
 /**
  * Check if tests should show the browser (not headless)
  */
 function shouldShowBrowser(): boolean {
-  const showBrowser = process.env.SHOW_BROWSER;
-  return showBrowser === '1' || showBrowser === 'true';
+  const showBrowser = process.env.SHOW_BROWSER
+  return showBrowser === '1' || showBrowser === 'true'
 }
-
-
-
-
 
 /**
  * Launch Chromium in headless mode for testing
- * 
+ *
  * @returns Promise<Browser> The launched browser instance
  * @throws Error if browser launch fails
  */
 async function launchTestBrowser(): Promise<Browser> {
-  const showBrowser = shouldShowBrowser();
+  const showBrowser = shouldShowBrowser()
 
-  console.log(`Launching Chromium in ${showBrowser ? 'visible' : 'headless'} mode for tests...`);
+  console.log(`Launching Chromium in ${showBrowser ? 'visible' : 'headless'} mode for tests...`)
 
   // Try to find Chromium executable
-  const executablePath = findChromiumExecutable();
+  const executablePath = findChromiumExecutable()
 
   try {
     const browser = await puppeteer.launch({
@@ -59,77 +52,79 @@ async function launchTestBrowser(): Promise<Browser> {
         `--remote-debugging-port=${9223 + Math.floor(Math.random() * 1000)}`, // Random port to avoid conflicts
         `--user-data-dir=/tmp/chromium-test-profile-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`, // Unique profile per run
         '--no-first-run',
-        '--disable-default-apps'
-      ]
-    });
+        '--disable-default-apps',
+      ],
+    })
 
-    return browser;
+    return browser
   } catch (error) {
-    throw new Error(`Failed to launch test browser: ${errorToString(error)}`);
+    throw new Error(`Failed to launch test browser: ${errorToString(error)}`)
   }
 }
 
 /**
  * Get or create the per-file browser instance for testing
  * This function ensures only one browser instance is created per test file
- * 
+ *
  * @returns Promise<Browser> The file-specific browser instance
  * @throws Error if browser connection fails
  */
 export async function getTestBrowser(): Promise<Browser> {
   if (!sharedBrowser) {
     // Always launch our own Chromium instance for tests
-    sharedBrowser = await launchTestBrowser();
-    sharedLaunched = true;
+    sharedBrowser = await launchTestBrowser()
+    _sharedLaunched = true
     // Handle unexpected disconnects quietly
     sharedBrowser.on('disconnected', () => {
-      sharedBrowser = null;
-      sharedLaunched = false;
-    });
+      sharedBrowser = null
+      _sharedLaunched = false
+    })
   }
-  return sharedBrowser;
+  return sharedBrowser
 }
 
 /**
  * Check if the file browser instance is available and connected
- * 
+ *
  * @returns boolean True if browser is available and connected
  */
 export function isTestBrowserAvailable(): boolean {
-  return sharedBrowser?.connected ?? false;
+  return sharedBrowser?.connected ?? false
 }
 
 /**
  * Clean up the file browser instance
  * This should be called during test teardown to ensure proper resource cleanup
- * 
+ *
  * @returns Promise<void>
  */
 export async function cleanupTestBrowser(): Promise<void> {
-  if (!sharedBrowser) return;
+  if (!sharedBrowser) return
   try {
     // Close all pages for a clean state, then close the browser
-    const pages = await sharedBrowser.pages();
-    const closeErrors: string[] = [];
+    const pages = await sharedBrowser.pages()
+    const closeErrors: string[] = []
     await Promise.all(
       pages.map(async (p, idx) => {
         try {
-          await p.close();
+          await p.close()
         } catch (err) {
-          closeErrors.push(`page#${idx}: ${errorToString(err)}`);
+          closeErrors.push(`page#${idx}: ${errorToString(err)}`)
         }
-      })
-    );
+      }),
+    )
     if (closeErrors.length > 0) {
-      const preview = closeErrors.slice(0, 5).join(' | ');
-      console.warn(`cleanupTestBrowser: failed to close ${closeErrors.length} page(s). First errors: ${preview}`);
+      const preview = closeErrors.slice(0, 5).join(' | ')
+      console.warn(
+        `cleanupTestBrowser: failed to close ${closeErrors.length} page(s). First errors: ${preview}`,
+      )
     }
-    await sharedBrowser.close();
+    await sharedBrowser.close()
   } catch (err) {
-    console.warn('cleanupTestBrowser: error during browser close:', errorToString(err));
+    console.warn('cleanupTestBrowser: error during browser close:', errorToString(err))
   } finally {
-    sharedBrowser = null;
-    sharedLaunched = false;
+    sharedBrowser = null
+    _sharedLaunched = false
   }
 }
 
@@ -138,31 +133,35 @@ export async function cleanupTestBrowser(): Promise<void> {
  * Call `close()` on the returned instance when done.
  */
 export async function createEphemeralBrowser(): Promise<Browser> {
-  return await launchTestBrowser();
+  return await launchTestBrowser()
 }
 
 /**
  * Create a new isolated browser page for a test
  * Each test should use its own page to ensure isolation
- * 
+ *
  * @param testName Optional test name for debugging purposes
  * @returns Promise<Page> A new browser page
  * @throws Error if browser is not available or page creation fails
  */
 export async function createTestPage(testName?: string) {
-  const browser = await getTestBrowser();
+  const browser = await getTestBrowser()
 
   try {
-    const page = await browser.newPage();
+    const page = await browser.newPage()
 
     if (testName) {
       // Set a user agent that includes the test name for debugging
-      await page.setUserAgent(`Test-Agent-${testName} ${await page.evaluate(() => navigator.userAgent)}`);
+      await page.setUserAgent(
+        `Test-Agent-${testName} ${await page.evaluate(() => navigator.userAgent)}`,
+      )
     }
 
-    return page;
+    return page
   } catch (error) {
-    throw new Error(`Failed to create test page${testName ? ` for ${testName}` : ''}: ${errorToString(error)}`);
+    throw new Error(
+      `Failed to create test page${testName ? ` for ${testName}` : ''}: ${errorToString(error)}`,
+    )
   }
 }
 
@@ -172,11 +171,11 @@ export async function createTestPage(testName?: string) {
  */
 export async function setupTests(): Promise<void> {
   try {
-    await getTestBrowser();
+    await getTestBrowser()
     // ready
   } catch (error) {
-    console.error('Test setup failed:', errorToString(error));
-    throw error;
+    console.error('Test setup failed:', errorToString(error))
+    throw error
   }
 }
 
@@ -186,10 +185,10 @@ export async function setupTests(): Promise<void> {
  */
 export async function teardownTests(): Promise<void> {
   try {
-    await cleanupTestBrowser();
+    await cleanupTestBrowser()
     // done
   } catch (error) {
-    console.error('Test teardown failed:', errorToString(error));
+    console.error('Test teardown failed:', errorToString(error))
     // Don't throw during teardown to avoid masking test failures
   }
 }
@@ -197,20 +196,20 @@ export async function teardownTests(): Promise<void> {
 /**
  * Error handler for browser connection failures during tests
  * Provides helpful error messages and troubleshooting information
- * 
+ *
  * @param error The error that occurred
  * @param context Additional context about when the error occurred
  */
-export function handleBrowserConnectionError(error: unknown, context: string = 'browser operation'): never {
-  const errorMessage = errorToString(error);
+export function handleBrowserConnectionError(error: unknown, context = 'browser operation'): never {
+  const errorMessage = errorToString(error)
 
-  console.error(`Browser connection error during ${context}:`, errorMessage);
-  console.error('Troubleshooting steps:');
-  console.error('1. Tests automatically launch a dedicated Chromium instance');
-  console.error('2. To see the browser during tests, set SHOW_BROWSER=1 or SHOW_BROWSER=true');
-  console.error('3. Ensure Chromium is installed and accessible to puppeteer-core');
-  console.error('4. Check that ports 9223 is not blocked by firewall');
-  console.error('5. Try clearing test profiles: rm -rf /tmp/chromium-test-profile-*');
+  console.error(`Browser connection error during ${context}:`, errorMessage)
+  console.error('Troubleshooting steps:')
+  console.error('1. Tests automatically launch a dedicated Chromium instance')
+  console.error('2. To see the browser during tests, set SHOW_BROWSER=1 or SHOW_BROWSER=true')
+  console.error('3. Ensure Chromium is installed and accessible to puppeteer-core')
+  console.error('4. Check that ports 9223 is not blocked by firewall')
+  console.error('5. Try clearing test profiles: rm -rf /tmp/chromium-test-profile-*')
 
-  throw new Error(`${context} failed: ${errorMessage}`);
+  throw new Error(`${context} failed: ${errorMessage}`)
 }

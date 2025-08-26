@@ -1,23 +1,58 @@
-import { Browser } from 'puppeteer-core';
-import puppeteer from 'puppeteer-core';
-import { errorToString } from '../utils/error.js';
+import puppeteer, { type Browser } from 'puppeteer-core'
+import { errorToString } from '../utils/error.js'
+
+/**
+ * Default Chrome/Chromium launch arguments for security and stability
+ */
+export const DEFAULT_LAUNCH_ARGS = [
+  '--no-sandbox',
+  '--disable-setuid-sandbox',
+  '--disable-dev-shm-usage',
+  '--disable-web-security',
+  '--disable-features=VizDisplayCompositor',
+  '--no-first-run',
+  '--disable-default-apps',
+] as const
 
 /**
  * Launch options for browser instances
  */
 export interface LaunchOptions {
-  headless?: boolean;
-  debugPort?: number;
-  userDataDir?: string;
-  additionalArgs?: string[];
+  headless?: boolean
+  debugPort?: number
+  userDataDir?: string
+  additionalArgs?: string[]
+}
+
+/**
+ * Build Chromium launch flags based on provided options
+ * @param options Launch configuration options
+ * @returns Array of command line arguments for browser launch
+ */
+export function buildChromiumLaunchFlags(options: LaunchOptions = {}): string[] {
+  const { debugPort, userDataDir, additionalArgs = [] } = options
+
+  const args = [...DEFAULT_LAUNCH_ARGS, ...additionalArgs]
+
+  // Add debug port if specified
+  if (debugPort) {
+    args.push(`--remote-debugging-port=${debugPort}`)
+  }
+
+  // Add user data directory if specified
+  if (userDataDir) {
+    args.push(`--user-data-dir=${userDataDir}`)
+  }
+
+  return args
 }
 
 /**
  * Browser executable information
  */
 export interface BrowserExecutableInfo {
-  path: string;
-  version: string;
+  path: string
+  version: string
 }
 
 /**
@@ -28,7 +63,7 @@ export class BrowserInstallation {
     public readonly path: string,
     public readonly version: string,
     public readonly source: 'system' | 'managed',
-    public readonly verified: boolean = false
+    public readonly verified: boolean = false,
   ) {}
 
   /**
@@ -37,45 +72,20 @@ export class BrowserInstallation {
    * @returns Promise resolving to Browser instance
    */
   async launch(options: LaunchOptions = {}): Promise<Browser> {
-    const {
-      headless = true,
-      debugPort,
-      userDataDir,
-      additionalArgs = []
-    } = options;
-
-    const args = [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-web-security',
-      '--disable-features=VizDisplayCompositor',
-      '--no-first-run',
-      '--disable-default-apps',
-      ...additionalArgs
-    ];
-
-    // Add debug port if specified
-    if (debugPort) {
-      args.push(`--remote-debugging-port=${debugPort}`);
-    }
-
-    // Add user data directory if specified
-    if (userDataDir) {
-      args.push(`--user-data-dir=${userDataDir}`);
-    }
+    const { headless = true } = options
+    const args = buildChromiumLaunchFlags(options)
 
     try {
       const browser = await puppeteer.launch({
         executablePath: this.path,
         headless,
         defaultViewport: null,
-        args
-      });
+        args,
+      })
 
-      return browser;
+      return browser
     } catch (error) {
-      throw new Error(`Failed to launch browser at ${this.path}: ${errorToString(error)}`);
+      throw new Error(`Failed to launch browser at ${this.path}: ${errorToString(error)}`)
     }
   }
 
@@ -86,24 +96,24 @@ export class BrowserInstallation {
   async verify(): Promise<boolean> {
     try {
       // Generate a unique debug port to avoid conflicts
-      const debugPort = 9223 + Math.floor(Math.random() * 1000);
-      const userDataDir = `/tmp/chromium-verify-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      const debugPort = 9223 + Math.floor(Math.random() * 1000)
+      const userDataDir = `/tmp/chromium-verify-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
 
       const browser = await this.launch({
         headless: true,
         debugPort,
-        userDataDir
-      });
+        userDataDir,
+      })
 
       // Try to create a page to ensure the browser is fully functional
-      const page = await browser.newPage();
-      await page.close();
-      await browser.close();
+      const page = await browser.newPage()
+      await page.close()
+      await browser.close()
 
-      return true;
+      return true
     } catch (error) {
-      console.warn(`Browser verification failed for ${this.path}: ${errorToString(error)}`);
-      return false;
+      console.warn(`Browser verification failed for ${this.path}: ${errorToString(error)}`)
+      return false
     }
   }
 
@@ -114,14 +124,14 @@ export class BrowserInstallation {
   getExecutableInfo(): BrowserExecutableInfo {
     return {
       path: this.path,
-      version: this.version
-    };
+      version: this.version,
+    }
   }
 
   /**
    * Create a string representation of this installation
    */
   toString(): string {
-    return `BrowserInstallation(${this.source}:${this.version}@${this.path})`;
+    return `BrowserInstallation(${this.source}:${this.version}@${this.path})`
   }
 }

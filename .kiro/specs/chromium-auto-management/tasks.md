@@ -16,7 +16,7 @@
   - _Requirements: 1.1, 1.2, 4.5, 6.1, 6.6_
 
 - [x] 3. Create Chrome for Testing API integration module
-  - Create `ChromeForTestingAPI` service to fetch available browser versions
+  - Create `ChromeForTestingApi` service to fetch available browser versions
   - Implement `getAvailableVersions()` method returning `BrowserVersion[]` with kind='chromium'
   - Add platform detection for macOS (mac_x64, mac_arm64) and Linux (linux64)
   - Implement download functionality with progress tracking and error handling

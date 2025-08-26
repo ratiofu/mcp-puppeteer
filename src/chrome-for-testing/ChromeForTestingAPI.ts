@@ -1,29 +1,24 @@
-import { join } from 'path';
-import { detectPlatform } from '../browser-discovery/envUtils.js';
-import type { 
-  BrowserVersion, 
-  DownloadOptions, 
-  DownloadResult
-} from './types.js';
-import { 
-  compareVersions,
+import { join } from 'node:path'
+import { detectPlatform } from '../browser-discovery/envUtils.js'
+import {
   extractFilenameFromUrl,
-  findPlatformDownload,
   findLatestVersion,
+  findPlatformDownload,
   findVersionByString,
-  transformApiResponse
-} from './core.js';
-import { DefaultChromeForTestingOperations, type ChromeForTestingOperations } from './operations.js';
+  transformApiResponse,
+} from './core.js'
+import { type ChromeForTestingOperations, DefaultChromeForTestingOperations } from './operations.js'
+import type { BrowserVersion, DownloadOptions, DownloadResult } from './types.js'
 
 /**
  * Chrome for Testing API integration service
  * Provides access to available Chromium versions and download functionality
  */
-export class ChromeForTestingAPI {
-  private operations: ChromeForTestingOperations;
+export class ChromeForTestingApi {
+  private operations: ChromeForTestingOperations
 
   constructor(operations?: ChromeForTestingOperations) {
-    this.operations = operations || new DefaultChromeForTestingOperations();
+    this.operations = operations || new DefaultChromeForTestingOperations()
   }
 
   /**
@@ -32,10 +27,12 @@ export class ChromeForTestingAPI {
    */
   async getAvailableVersions(): Promise<BrowserVersion[]> {
     try {
-      const data = await this.operations.fetchVersions();
-      return transformApiResponse(data);
+      const data = await this.operations.fetchVersions()
+      return transformApiResponse(data)
     } catch (error) {
-      throw new Error(`Failed to fetch available versions: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to fetch available versions: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      )
     }
   }
 
@@ -45,54 +42,55 @@ export class ChromeForTestingAPI {
    * @param options Download options including destination and progress callback
    * @returns Promise resolving to download result
    */
-  async downloadChromium(version: BrowserVersion, options: DownloadOptions): Promise<DownloadResult> {
-    const platformInfo = detectPlatform();
-    
+  async downloadChromium(
+    version: BrowserVersion,
+    options: DownloadOptions,
+  ): Promise<DownloadResult> {
+    const platformInfo = detectPlatform()
+
     if (!platformInfo.supported) {
       return {
         success: false,
-        error: `Platform ${platformInfo.name} is not supported for Chrome for Testing downloads`
-      };
+        error: `Platform ${platformInfo.name} is not supported for Chrome for Testing downloads`,
+      }
     }
 
-    const chromeDownloads = version.downloads.chrome || [];
-    const platformDownload = findPlatformDownload(chromeDownloads, platformInfo.platform);
-    
+    const chromeDownloads = version.downloads.chrome || []
+    const platformDownload = findPlatformDownload(chromeDownloads, platformInfo.platform)
+
     if (!platformDownload) {
       return {
         success: false,
-        error: `No download URL available for ${platformInfo.name} (${platformInfo.platform})`
-      };
+        error: `No download URL available for ${platformInfo.name} (${platformInfo.platform})`,
+      }
     }
-    
-    const downloadUrl = platformDownload.url;
+
+    const downloadUrl = platformDownload.url
 
     try {
       // Generate filename from URL
-      const filename = extractFilenameFromUrl(downloadUrl);
-      const filePath = join(options.destinationDir, filename);
+      const filename = extractFilenameFromUrl(downloadUrl)
+      const filePath = join(options.destinationDir, filename)
 
       // Start download with progress tracking
-      const result = await this.operations.downloadFile(downloadUrl, filePath, options);
-      
-      return result;
+      const result = await this.operations.downloadFile(downloadUrl, filePath, options)
+
+      return result
     } catch (error) {
       return {
         success: false,
-        error: `Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      };
+        error: `Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      }
     }
   }
-
-
 
   /**
    * Get the latest available version
    * @returns Promise resolving to the latest browser version
    */
   async getLatestVersion(): Promise<BrowserVersion | null> {
-    const versions = await this.getAvailableVersions();
-    return findLatestVersion(versions);
+    const versions = await this.getAvailableVersions()
+    return findLatestVersion(versions)
   }
 
   /**
@@ -101,7 +99,7 @@ export class ChromeForTestingAPI {
    * @returns Promise resolving to the browser version or null if not found
    */
   async findVersion(versionString: string): Promise<BrowserVersion | null> {
-    const versions = await this.getAvailableVersions();
-    return findVersionByString(versions, versionString);
+    const versions = await this.getAvailableVersions()
+    return findVersionByString(versions, versionString)
   }
 }

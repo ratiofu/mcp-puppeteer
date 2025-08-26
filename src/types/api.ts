@@ -1,9 +1,5 @@
 // Import MCP SDK types for protocol compliance
-import type { 
-  CallToolResult, 
-  TextContent, 
-  ImageContent 
-} from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult, ImageContent, TextContent } from '@modelcontextprotocol/sdk/types.js'
 
 // Tool-specific request types (parameters passed to tools)
 
@@ -12,7 +8,7 @@ import type {
  */
 export interface NavigateRequest {
   /** The URL to navigate to, must be a valid HTTP/HTTPS URL */
-  url: string;
+  url: string
 }
 
 /**
@@ -20,7 +16,7 @@ export interface NavigateRequest {
  */
 export interface ClickRequest {
   /** CSS selector of the element to click */
-  selector: string;
+  selector: string
 }
 
 /**
@@ -28,16 +24,14 @@ export interface ClickRequest {
  */
 export interface GetConsoleRequest {
   /** Whether to clear the console logs after retrieving them */
-  clear?: boolean;
+  clear?: boolean
 }
 
 /**
  * Request parameters for tools that don't require any parameters
  * Used by: list_tab_urls, take_screenshot, get_html
  */
-export interface EmptyRequest {
-  // No parameters required
-}
+export type EmptyRequest = Record<string, never>
 
 // Tool response types (extend MCP CallToolResult for protocol compliance)
 
@@ -46,9 +40,9 @@ export interface EmptyRequest {
  */
 export interface NavigateResponse extends CallToolResult {
   /** Array containing the response message */
-  content: Array<TextContent>;
+  content: Array<TextContent>
   /** Indicates whether the operation resulted in an error */
-  isError: boolean;
+  isError: boolean
 }
 
 /**
@@ -56,9 +50,9 @@ export interface NavigateResponse extends CallToolResult {
  */
 export interface ClickResponse extends CallToolResult {
   /** Array containing the response message */
-  content: Array<TextContent>;
+  content: Array<TextContent>
   /** Indicates whether the operation resulted in an error */
-  isError: boolean;
+  isError: boolean
 }
 
 /**
@@ -66,9 +60,9 @@ export interface ClickResponse extends CallToolResult {
  */
 export interface ScreenshotResponse extends CallToolResult {
   /** Array containing the base64-encoded PNG image data or error text */
-  content: Array<ImageContent | TextContent>;
+  content: Array<ImageContent | TextContent>
   /** Indicates whether the operation resulted in an error */
-  isError: boolean;
+  isError: boolean
 }
 
 /**
@@ -76,9 +70,9 @@ export interface ScreenshotResponse extends CallToolResult {
  */
 export interface GetHtmlResponse extends CallToolResult {
   /** Array containing the HTML content of the current page */
-  content: Array<TextContent>;
+  content: Array<TextContent>
   /** Indicates whether the operation resulted in an error */
-  isError: boolean;
+  isError: boolean
 }
 
 /**
@@ -86,9 +80,9 @@ export interface GetHtmlResponse extends CallToolResult {
  */
 export interface GetConsoleResponse extends CallToolResult {
   /** Array containing the console output */
-  content: Array<TextContent>;
+  content: Array<TextContent>
   /** Indicates whether the operation resulted in an error */
-  isError: boolean;
+  isError: boolean
 }
 
 /**
@@ -96,9 +90,9 @@ export interface GetConsoleResponse extends CallToolResult {
  */
 export interface ListTabUrlsResponse extends CallToolResult {
   /** Array containing the comma-separated list of tab URLs */
-  content: Array<TextContent>;
+  content: Array<TextContent>
   /** Indicates whether the operation resulted in an error */
-  isError: boolean;
+  isError: boolean
 }
 
 // Union types for convenience and type safety
@@ -106,56 +100,52 @@ export interface ListTabUrlsResponse extends CallToolResult {
 /**
  * Union type for all possible tool request parameters
  */
-export type ToolRequest = 
-  | NavigateRequest 
-  | ClickRequest 
-  | GetConsoleRequest 
-  | EmptyRequest;
+export type ToolRequest = NavigateRequest | ClickRequest | GetConsoleRequest | EmptyRequest
 
 /**
  * Union type for all possible tool response types
  */
-export type ToolResponse = 
-  | NavigateResponse 
-  | ClickResponse 
-  | ScreenshotResponse 
-  | GetHtmlResponse 
-  | GetConsoleResponse 
-  | ListTabUrlsResponse;
+export type ToolResponse =
+  | NavigateResponse
+  | ClickResponse
+  | ScreenshotResponse
+  | GetHtmlResponse
+  | GetConsoleResponse
+  | ListTabUrlsResponse
 
 /**
  * Union type for all text-based tool responses
  */
-export type TextToolResponse = 
-  | NavigateResponse 
-  | ClickResponse 
-  | GetHtmlResponse 
-  | GetConsoleResponse 
-  | ListTabUrlsResponse;
+export type TextToolResponse =
+  | NavigateResponse
+  | ClickResponse
+  | GetHtmlResponse
+  | GetConsoleResponse
+  | ListTabUrlsResponse
 
 /**
  * Union type for all image-based tool responses
  */
-export type ImageToolResponse = ScreenshotResponse;
+export type ImageToolResponse = ScreenshotResponse
 
 // Tool name constants for type safety
 
 /**
  * Available tool names in the MCP server
  */
-export const TOOL_NAMES = {
-  NAVIGATE: 'navigate',
-  LIST_TAB_URLS: 'list_tab_urls',
-  CLICK: 'click',
-  TAKE_SCREENSHOT: 'take_screenshot',
-  GET_HTML: 'get_html',
-  GET_CONSOLE: 'get_console'
-} as const;
+export const ToolNames = {
+  navigate: 'navigate',
+  listTabUrls: 'list_tab_urls',
+  click: 'click',
+  takeScreenshot: 'take_screenshot',
+  getHtml: 'get_html',
+  getConsole: 'get_console',
+} as const
 
 /**
  * Union type of all available tool names
  */
-export type ToolName = typeof TOOL_NAMES[keyof typeof TOOL_NAMES];
+export type ToolName = (typeof ToolNames)[keyof typeof ToolNames]
 
 // Tool mapping types for enhanced type safety
 
@@ -163,24 +153,24 @@ export type ToolName = typeof TOOL_NAMES[keyof typeof TOOL_NAMES];
  * Maps tool names to their corresponding request parameter types
  */
 export interface ToolRequestMap {
-  [TOOL_NAMES.NAVIGATE]: NavigateRequest;
-  [TOOL_NAMES.CLICK]: ClickRequest;
-  [TOOL_NAMES.GET_CONSOLE]: GetConsoleRequest;
-  [TOOL_NAMES.LIST_TAB_URLS]: EmptyRequest;
-  [TOOL_NAMES.TAKE_SCREENSHOT]: EmptyRequest;
-  [TOOL_NAMES.GET_HTML]: EmptyRequest;
+  [ToolNames.navigate]: NavigateRequest
+  [ToolNames.click]: ClickRequest
+  [ToolNames.getConsole]: GetConsoleRequest
+  [ToolNames.listTabUrls]: EmptyRequest
+  [ToolNames.takeScreenshot]: EmptyRequest
+  [ToolNames.getHtml]: EmptyRequest
 }
 
 /**
  * Maps tool names to their corresponding response types
  */
 export interface ToolResponseMap {
-  [TOOL_NAMES.NAVIGATE]: NavigateResponse;
-  [TOOL_NAMES.CLICK]: ClickResponse;
-  [TOOL_NAMES.GET_CONSOLE]: GetConsoleResponse;
-  [TOOL_NAMES.LIST_TAB_URLS]: ListTabUrlsResponse;
-  [TOOL_NAMES.TAKE_SCREENSHOT]: ScreenshotResponse;
-  [TOOL_NAMES.GET_HTML]: GetHtmlResponse;
+  [ToolNames.navigate]: NavigateResponse
+  [ToolNames.click]: ClickResponse
+  [ToolNames.getConsole]: GetConsoleResponse
+  [ToolNames.listTabUrls]: ListTabUrlsResponse
+  [ToolNames.takeScreenshot]: ScreenshotResponse
+  [ToolNames.getHtml]: GetHtmlResponse
 }
 
 // Error response helper types
@@ -190,28 +180,24 @@ export interface ToolResponseMap {
  */
 export interface ErrorResponse extends CallToolResult {
   /** Array containing the error message */
-  content: Array<TextContent>;
+  content: Array<TextContent>
   /** Always true for error responses */
-  isError: true;
+  isError: true
 }
 
 /**
  * Common error messages used across tools
  */
 export const ERROR_MESSAGES = {
-  NO_PAGE: 'no current page',
-  NO_PAGE_TO_CLICK: 'no current page to click',
-  NO_PAGE_TO_SCREENSHOT: 'no current page to screenshot',
-  NO_PAGE_TO_EXTRACT_HTML: 'no current page to extract HTML from',
-  NO_PAGE_WITH_CONSOLE: 'no current page with console output',
-  NAVIGATION_FAILED: 'navigation failed',
-  CLICK_FAILED: 'click operation failed',
-  SCREENSHOT_FAILED: 'screenshot capture failed',
-  HTML_EXTRACTION_FAILED: 'HTML extraction failed',
-  CONSOLE_RETRIEVAL_FAILED: 'console output retrieval failed'
-} as const;
+  noPage: 'no current page',
+  navigationFailed: 'navigation failed',
+  clickFailed: 'click operation failed',
+  screenshotFailed: 'screenshot capture failed',
+  htmlExtractionFailed: 'HTML extraction failed',
+  consoleRetrievalFailed: 'console output retrieval failed',
+} as const
 
 /**
  * Union type of all error message constants
  */
-export type ErrorMessage = typeof ERROR_MESSAGES[keyof typeof ERROR_MESSAGES];
+export type ErrorMessage = (typeof ERROR_MESSAGES)[keyof typeof ERROR_MESSAGES]

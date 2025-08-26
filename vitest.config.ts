@@ -1,5 +1,6 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vitest/config'
 
+// biome-ignore lint/style/noDefaultExport: that's how vitest expect the export
 export default defineConfig({
   test: {
     // Use Node.js environment for testing
@@ -12,9 +13,9 @@ export default defineConfig({
     setupFiles: ['./src/test-utils/vitest-setup.ts'],
 
     // Timeout settings for browser operations
-    testTimeout: 10000, // 10 seconds for individual tests
-    hookTimeout: 5_000,  // 5 seconds for setup/teardown hooks
-    teardownTimeout: 5_000, // 5 seconds for cleanup
+    testTimeout: 10_000, // 10 seconds for individual tests
+    hookTimeout: 5000, // 5 seconds for setup/teardown hooks
+    teardownTimeout: 5000, // 5 seconds for cleanup
 
     // Test file patterns - look for .test.ts files in _tests directories
     include: ['src/**/_tests/**/*.test.ts'],
@@ -25,7 +26,7 @@ export default defineConfig({
       'dist',
       'src/**/_tests/**/test-resources/**', // Exclude test resource files
       '.git',
-      '.kiro'
+      '.kiro',
     ],
 
     // Coverage configuration
@@ -38,7 +39,7 @@ export default defineConfig({
         'src/**/_tests/**', // Exclude all test files
         'src/test-utils/vitest-setup.ts', // Exclude test setup file
         'src/index.ts', // CLI entrypoint not unit-tested
-        'src/**/*.d.ts' // Exclude type definition files
+        'src/**/*.d.ts', // Exclude type definition files
         // Note: test-utils utility files (like test-web-server.ts) are now included in coverage
       ],
       all: true,
@@ -46,8 +47,8 @@ export default defineConfig({
         lines: 80,
         functions: 80,
         branches: 80,
-        statements: 80
-      }
+        statements: 80,
+      },
     },
 
     // Parallel execution settings
@@ -56,11 +57,11 @@ export default defineConfig({
       threads: {
         // Enable parallelism; per-session incognito contexts ensure isolation
         maxThreads: 4,
-        minThreads: 1
-      }
+        minThreads: 1,
+      },
     },
 
     // Global setup/teardown once per entire test run (not per worker)
-    globalSetup: ['./src/test-utils/global-setup.ts']
-  }
-});
+    globalSetup: ['./src/test-utils/global-setup.ts'],
+  },
+})
