@@ -3,11 +3,10 @@
 ## Runtime & Language
 - **Node.js** with ESNext modules
 - **TypeScript** with strict mode
-- **ts-node** for runtime execution (no compilation step)
+- **esbuild** for compilation and bundling (no ts-node)
 
 ## Core Dependencies
 - **puppeteer-core** - Browser automation (no bundled browser)
-- **express** - HTTP server and routing
 - **@modelcontextprotocol/sdk** - MCP protocol implementation
 - **zod** - Input validation and schema definition (version compatibility critical)
 
@@ -26,8 +25,14 @@
 - **Production**: Uses esbuild for fast JavaScript bundling
 - **Output**: Single bundled `dist/index.js` file
 - **Target**: Node.js 22+ with ESM modules
-- **Externals**: Dependencies like puppeteer-core, express, MCP SDK remain external
+- **Externals**: Dependencies like puppeteer-core, MCP SDK remain external
 - **No type declarations**: Runtime-only package, no TypeScript definitions generated
+
+## Code Quality Tools
+- **Biome**: Fast linter and formatter for JavaScript/TypeScript
+- **Configuration**: `biome.json` with strict rules and formatting standards
+- **Integration**: Runs automatically in quality pipeline and build process
+- **Auto-fix**: `pnpm run lint:fix` applies automatic fixes where possible
 
 ## Common Commands
 
@@ -39,14 +44,19 @@ pnpm install
 
 ### Development
 ```bash
-# Type check TypeScript code
-pnpm run typecheck
+# Run full quality pipeline (type check, lint, format, test coverage)
+pnpm run quality
 
-# Build and start the MCP server (includes type checking)
+# Individual quality checks
+pnpm run typecheck    # Type check TypeScript code
+pnpm run lint         # Check code with Biome linter
+pnpm run lint:fix     # Auto-fix linting and formatting issues
+
+# Build and start the MCP server (includes quality checks)
 pnpm run build
 pnpm run start
 
-# Or build and start in one command (development)
+# Development with watch mode
 pnpm run dev
 
 # Start Chromium with remote debugging (required)
@@ -74,99 +84,92 @@ pnpm run test:watch
 pnpm run test:coverage
 
 # Use MCP Inspector for interactive testing
-pnpx @modelcontextprotocol/inspector
-# Connect to: http://localhost:7742/sse
+pnpx @modelcontextprotocol/inspector node dist/index.js
 ```
 
 ## Configuration
 - **Server Port**: 7742 (hardcoded)
 - **Chromium Debug Port**: 9222 (expected)
-- **Transport**: Server-Sent Events (SSE) over HTTP
+- **Transport**: Standard I/O (stdio) for MCP protocol
 - **Session Management**: In-memory with automatic cleanup
 
-## Code Style Guidelines
+## Code Quality Standards
+- **Linting**: Biome with strict rules for correctness, style, and security
+- **Formatting**: Biome formatter with consistent style enforcement
+- **Indentation**: 2 spaces, line width 100 characters
+- **Quotes**: Single quotes, semicolons as needed, trailing commas always
+- **Import organization**: Automatic via Biome assist actions
+- **Type Safety**: TypeScript strict mode, no `any` types allowed
+- **Exports**: Prefer named exports over default exports (enforced by Biome)
 
-### Build Configuration
-- **esbuild**: Bundles and minifies JavaScript targeting Node.js 22+ with ESM
-- **Configuration**: `esbuild.config.js` contains all build settings
-- **Externals**: All dependencies remain external (not bundled)
-- **Output**: Single minified `index.js` in dist folder
-- **Minification**: Enabled for smaller bundle size
-- **No source maps**: Optimized for NPM publishing
-- **No type declarations**: Runtime-only server package
-
-### Formatting Standards
-- **Indentation**: 2 spaces (enforced by .editorconfig)
-- **Line endings**: LF (Unix-style)
-- **Charset**: UTF-8
-- **Trailing whitespace**: Trimmed (except Markdown)
-- **Final newline**: Required
-
-### Development Best Practices
+## Development Best Practices
 - Use Zod for input validation
 - Implement proper error handling with `isError` flags
 - Maintain session isolation between concurrent users
 - Clean up resources (pages, intervals) on disconnect
-- Session-based architecture with proper cleanup
 - Console logging includes session IDs for traceability
+- Run `pnpm run quality` before committing changes
+- Use Biome ignore comments sparingly and with clear justification
 
-### Test Coverage Best Practices
+## Test Coverage Best Practices
 - **Always run tests with coverage**: Use `pnpm run test:coverage` instead of `pnpm test`
-- **Analyze coverage reports**: Review `coverage/lcov.info` and HTML reports to identify gaps
-- **Target specific lines**: Focus on uncovered lines shown in coverage reports
 - **Maintain 80% threshold**: Lines, functions, branches, and statements must be ≥80%
+- **Target specific lines**: Focus on uncovered lines shown in coverage reports
 - **Test edge cases**: Ensure error paths and boundary conditions are covered
-- **Use coverage to guide refactoring**: High coverage enables safe code changes
 
-### MCP Protocol Compatibility
-- **Zod Version Compatibility**: The MCP SDK requires Zod ^3.23.8, not Zod 4.x
-- **Schema Definition**: Use `z.string().url()` instead of `z.url()` for URL validation in Zod 3.x
-- **Tool Parameter Schemas**: Ensure Zod schemas are properly converted to JSON Schema for MCP clients
-- **Version Conflicts**: Always check MCP SDK dependencies when updating Zod versions
-- **Testing**: Verify tool schemas appear correctly in `tools/list` responses after Zod changes
+## MCP Protocol Compatibility
+- **Zod Version**: MCP SDK requires Zod ^3.23.8, not Zod 4.x
+- **Schema Definition**: Use `z.string().url()` instead of `z.url()` for URL validation
+- **Tool Parameter Schemas**: Ensure Zod schemas convert properly to JSON Schema for MCP clients
+- **Testing**: Verify tool schemas appear correctly in `tools/list` responses
 
 ## Testing Infrastructure
 
 ### Unit Testing with Vitest
 - **Test Framework**: Vitest with v8 coverage provider
 - **Test Location**: `src/**/_tests/**/*.test.ts` pattern
-- **Coverage Reports**: Text, LCOV, HTML, and JSON formats
+- **Coverage Reports**: Text, LCOV formats (no HTML in CI)
 - **Coverage Thresholds**: 80% for lines, functions, branches, and statements
 - **Test Environment**: Node.js with global test functions enabled
-- **Timeouts**: 30s for tests, 5s for hooks (optimized for browser operations)
+- **Timeouts**: 10s for tests, 5s for hooks (optimized for browser operations)
+- **Parallel Execution**: Up to 4 threads with session isolation
+- **Global Setup**: Chromium cleanup and test environment preparation
 
 ### Coverage Analysis
-- **JSON Report**: `coverage/coverage-final.json` for programmatic analysis
 - **LCOV Report**: `coverage/lcov.info` for CI/CD integration and detailed line-by-line analysis
-- **HTML Report**: `coverage/lcov-report/index.html` for browser viewing
 - **Console Output**: Real-time coverage summary during test runs
+- **Quality Pipeline**: Coverage runs automatically as part of `pnpm run quality`
+- **Exclusions**: Test files, setup files, and CLI entrypoint excluded from coverage
 
 ### Coverage Validation & Analysis
 ```bash
-# Always run tests with coverage for development
-pnpm run test:coverage
+# Run full quality pipeline (includes coverage)
+pnpm run quality
 
-# View detailed HTML coverage report
-open coverage/lcov-report/index.html
+# Run tests with coverage only
+pnpm run test:coverage
 
 # Analyze LCOV report for specific uncovered lines
 grep -A 5 -B 5 "DA:.*,0" coverage/lcov.info
+
+# Target specific test files during development
+npx vitest run src/specific-module/_tests/
 ```
 
-### Coverage-Driven Development Workflow
-1. **Run tests with coverage**: `pnpm run test:coverage`
-2. **Analyze results**: Review console output and HTML report
-3. **Focus on files below 80% threshold**
-4. **Target specific uncovered lines shown in reports**
-5. **Repeat until all thresholds met**
+### Quality-Driven Development Workflow
+1. **Run quality pipeline**: `pnpm run quality` (type check + lint + format + coverage)
+2. **Analyze results**: Review console output for failures
+3. **Fix issues**: Use `pnpm run lint:fix` for auto-fixable problems
+4. **Target coverage gaps**: Focus on files below 80% threshold
+5. **Iterative testing**: Use `npx vitest run path/to/specific/test` for focused development
+6. **Repeat until all checks pass**
 
 ## Testing Approach
 
 ### Manual Testing Process
 1. Start Chromium with remote debugging: `--remote-debugging-port=9222`
 2. Build and run the server: `pnpm run dev` (or `pnpm run build && pnpm run start`)
-3. Use MCP Inspector to test tools: `pnpx @modelcontextprotocol/inspector`
-4. Connect to: `http://localhost:7742/sse`
+3. Use MCP Inspector to test tools: `pnpx @modelcontextprotocol/inspector node dist/index.js`
 
 ### Integration Testing
 - Test each MCP tool individually
@@ -217,5 +220,5 @@ fi
 ## Debugging
 - Console logs include session IDs for tracing
 - Browser console output captured and retrievable
-- MCP Inspector provides interactive testing
-- Express server logs HTTP requests
+- MCP Inspector provides interactive testing via stdio transport
+- Comprehensive error handling with detailed error messages

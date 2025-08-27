@@ -1,3 +1,5 @@
+- update readme!
+
 - primary guidance:
   * prefer functional code composed of immutable values and pure functions
   * write only the absolute minimum amount of code

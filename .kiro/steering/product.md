@@ -11,12 +11,6 @@ This is a **Puppeteer MCP Server** - a Model Context Protocol server that provid
 - Support concurrent browser sessions with proper isolation
 - Give the AI agent access to the current page's DOM
 
-## Key Components
-- **MCP Server**: Implements the Model Context Protocol for browser automation
-- **Puppeteer Integration**: Uses puppeteer-core to control Chromium via remote debugging
-- **Express Server**: Provides HTTP/SSE transport for MCP communication
-- **Session Management**: Handles multiple concurrent browser sessions
-
 ## Available MCP Tools
 - `navigate`: Navigate to URLs
 - `list_tab_urls`: List all open tab URLs
@@ -31,13 +25,10 @@ This is a **Puppeteer MCP Server** - a Model Context Protocol server that provid
 - Interactive browser control for AI agents
 - Remote browser debugging and monitoring
 
-
-
 ## Security Considerations
 
 ### Browser Security
 - **Remote debugging port**: Only bind to localhost (9222)
-- **Network exposure**: Server runs on localhost:7742 by default
 - **Session isolation**: Each MCP session gets its own browser page
 - **Resource cleanup**: Pages are closed when sessions disconnect
 
@@ -47,8 +38,22 @@ This is a **Puppeteer MCP Server** - a Model Context Protocol server that provid
 - CSS selector sanitization for clicks
 - No arbitrary code execution in browser context
 
-### Roadmap
-- Convert to using local pipe instead of SSE
-- Publish as public NPM package so it can be run via `npx`
-- If the already running Chromium instance does not have its debug port enabled, offer to install Chromium and use that
-- Automatically start Chromium if it is available, but offer a flag to try to connect to a running instance instead and give up if no open debug port can be found
+### Operational Security
+- Run in isolated environments for production use
+- Monitor resource usage (memory, CPU, browser processes)
+- Implement rate limiting for production deployments
+- Consider sandboxing browser instances
+- Log security-relevant events (navigation, clicks)
+
+## Package Information
+- **NPM Package**: `@ratiofu/mcp-puppeteer`
+- **Current Version**: 1.1.0
+- **Installation**: `npx @ratiofu/mcp-puppeteer`
+- **Repository**: https://github.com/ratiofu/mcp-puppeteer
+
+## Roadmap
+- ✅ Convert to using local pipe instead of SSE
+- ✅ Publish as public NPM package so it can be run via `npx`
+- 🔄 Automatic Chromium management and installation
+- 🔄 Smart connection fallback with configurable retry logic
+- 🔄 Enhanced error reporting and debugging capabilities
