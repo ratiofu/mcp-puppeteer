@@ -2,7 +2,7 @@
 
 ## Critical Requirements
 - Write only the absolute minimum code to meet expected outcomes
-- Ask for human approval before adding behavior not explicitly requested
+- Ask for human approval before adding behavior not explicitly requested or refactoring more than 50% of a file
 - Work on one task at a time, in the order given
 - Prefer functional code with immutable values and pure functions
 - Write tests first when feasible

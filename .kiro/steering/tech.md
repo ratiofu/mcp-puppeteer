@@ -1,5 +1,7 @@
 # Technology Stack
 
+IMPORTANT: Follow [Agent Guidance](../../AGENTS.md) strictly!
+
 ## Runtime & Language
 - **Node.js** with ESNext modules
 - **TypeScript** with strict mode

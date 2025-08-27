@@ -41,27 +41,28 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.5_
 
 - [ ] 5.1. Align existing services with functional architecture
-  - Extract pure functions from `BrowserDiscoveryService` class methods
+  - Extract those functions that are already pure from `BrowserDiscoveryService` to standalone functions
+    - do not convert existing functions to pure functions!
+    - the first pure function refactoring may identify a second set of pure functions to extract
+    - if the pure functions already have an equivalent or near equivalent in the project, reuse and/or merge
   - Remove request objects (`FindBestBrowserRequest`, `CheckRunningBrowserRequest`) and use direct parameters
-  - Refactor `BrowserManagerService` to use pure functions for core logic
-  - Export pure functions from module index files for direct use
-  - Update service classes to be thin wrappers around pure functions
   - Write unit tests for extracted pure functions
-  - _Requirements: Alignment with AGENTS.md functional architecture_
+  - [strictly follow Agent Guidelines](../../../AGENTS.md)
 
 - [ ] 5.2. Extract pure functions from version inspector service
-  - Move pure logic from `VersionInspectorService` to standalone functions
-  - Export `getVersionRequirement`, `checkCompatibility`, `getAvailableVersions` as pure functions
-  - Refactor service class to be thin wrapper around pure functions
-  - Update module exports to include pure functions
+  - Extract those functions that are already pure from `VersionInspectorService` to standalone functions
+    - do not convert existing functions to pure functions!
+    - the first pure function refactoring may identify a second set of pure functions to extract
+    - if the pure functions already have an equivalent or near equivalent in the project, reuse and/or merge
   - Write unit tests for pure version functions
-  - _Requirements: Alignment with AGENTS.md functional architecture_
+  - [strictly follow Agent Guidelines](../../../AGENTS.md)
 
 - [ ] 6. Add new MCP tools for browser management
   - Write unit tests for `install_browser` MCP tool functionality first
   - Add `install_browser` MCP tool that uses pure `installChromium()` function
   - Implement tool input validation with Zod schemas for version parameters
   - Add proper error handling with installation guidance messages
+  - [strictly follow Agent Guidelines](../../../AGENTS.md)
   - _Requirements: 2.9, 4.4_
 
 - [ ] 7. Add new MCP resources for browser status and version information
@@ -70,6 +71,7 @@
   - Create `browser://status` resource using pure status checking functions
   - Create `browser://versions` resource using pure `getAvailableVersions()` function
   - Implement next steps recommendations (install, upgrade, none) as pure logic
+  - [strictly follow Agent Guidelines](../../../AGENTS.md)
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
 - [ ] 8. Integrate auto-discovery with existing MCP server startup
@@ -81,6 +83,7 @@
   - Add version checking using pure `checkCompatibility()` function
   - Refactor `test-setup.ts` to use extracted pure functions and `BrowserInstallation` class
   - Update `launchTestBrowser()` to use pure launch logic while maintaining test configurations
+  - [strictly follow Agent Guidelines](../../../AGENTS.md)
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
 - [ ] 9. Create CLI executable with MCP client protocol communication
@@ -90,6 +93,7 @@
   - Implement MCP client protocol connection as thin wrapper around pure functions
   - Add command routing for `list|l`, `install|i`, `update-expected-version|u`, `help`
   - Implement interactive mode using pure selection logic
+  - [strictly follow Agent Guidelines](../../../AGENTS.md)
   - _Requirements: 2.1, 2.2, 2.7, 2.9_
 
 - [ ] 10. Implement CLI list command with Clack UI
@@ -98,6 +102,7 @@
   - Create minimal `list` command wrapper using pure function
   - Implement Clack UI as thin presentation layer over pure logic
   - Add version display using pure formatting functions
+  - [strictly follow Agent Guidelines](../../../AGENTS.md)
   - _Requirements: 2.1_
 
 - [ ] 11. Implement CLI install command with version selection
@@ -107,6 +112,7 @@
   - Add `--force-latest` and `-f` flag handling as pure parameter processing
   - Implement version selection UI as thin layer over pure selection logic
   - Add progress feedback using pure progress calculation functions
+  - [strictly follow Agent Guidelines](../../../AGENTS.md)
   - _Requirements: 2.2, 2.3_
 
 - [ ] 12. Implement CLI update-expected-version command for project version files
@@ -116,6 +122,7 @@
   - Add repo root detection using pure file system checking logic
   - Implement `--force-latest` flag handling as pure parameter processing
   - Add version selection UI as thin layer over pure selection logic
+  - [strictly follow Agent Guidelines](../../../AGENTS.md)
   - _Requirements: 2.4, 2.5, 3.4_
 
 - [ ] 13. Add CLI integration with version file management
@@ -124,6 +131,7 @@
   - Implement automatic prompting using pure conditional logic
   - Add version file creation using pure file operations
   - Ensure exclusive write access through pure file locking logic
+  - [strictly follow Agent Guidelines](../../../AGENTS.md)
   - _Requirements: 2.8, 3.4_
 
 - [ ] 14. Implement comprehensive error handling and user guidance
@@ -133,6 +141,7 @@
   - Implement installation guidance using pure recommendation logic
   - Add retry mechanisms using pure retry calculation functions
   - Create user-friendly responses using pure message formatting
+  - [strictly follow Agent Guidelines](../../../AGENTS.md)
   - _Requirements: 1.3, 3.3_
 
 - [ ] 15. Add cleanup and maintenance features
@@ -142,4 +151,6 @@
   - Add maintenance commands using pure cleanup functions
   - Implement resource cleanup using pure process management functions
   - Add logging using pure log formatting functions
+  - [strictly follow Agent Guidelines](../../../AGENTS.md)
   - _Requirements: 4.3_
+  
