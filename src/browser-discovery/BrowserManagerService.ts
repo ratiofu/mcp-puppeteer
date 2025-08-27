@@ -2,6 +2,7 @@ import type { ExecSyncOptions } from 'node:child_process'
 import type { Dirent } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
+import { compareVersions } from '../chrome-for-testing/core.js'
 import type {
   BrowserVersion,
   DownloadOptions,
@@ -474,25 +475,4 @@ export function findExecutableInDirectory(
   }
 
   return null
-}
-
-/**
- * Compare two version strings
- * @private
- */
-export function compareVersions(version1: string, version2: string): number {
-  const parts1 = version1.split('.').map(Number)
-  const parts2 = version2.split('.').map(Number)
-
-  const maxLength = Math.max(parts1.length, parts2.length)
-
-  for (let i = 0; i < maxLength; i++) {
-    const part1 = parts1[i] || 0
-    const part2 = parts2[i] || 0
-
-    if (part1 < part2) return -1
-    if (part1 > part2) return 1
-  }
-
-  return 0
 }

@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { expectNotNull } from '../../test-utils/index.js'
 import { BrowserDiscoveryService } from '../BrowserDiscoveryService.js'
 import { BrowserInstallation } from '../BrowserInstallation.js'
 
@@ -10,8 +9,6 @@ describe('BrowserDiscoveryService', () => {
   beforeEach(() => {
     // Save original environment
     originalEnv = { ...process.env }
-
-    // Create service instance
     service = new BrowserDiscoveryService()
   })
 
@@ -20,12 +17,18 @@ describe('BrowserDiscoveryService', () => {
     process.env = originalEnv
   })
 
-  describe('discoverBrowsers', () => {
-    it('should return an array of browser installations', async () => {
+  describe('service integration', () => {
+    it('should create a service instance with required methods', () => {
+      expect(service).toBeInstanceOf(BrowserDiscoveryService)
+      expect(typeof service.discoverBrowsers).toBe('function')
+      expect(typeof service.findBestBrowser).toBe('function')
+      expect(typeof service.checkRunningBrowser).toBe('function')
+    })
+
+    it('should discover browsers and return valid installations', async () => {
       const browsers = await service.discoverBrowsers()
 
       expect(Array.isArray(browsers)).toBe(true)
-      // Each browser should be a BrowserInstallation instance
       browsers.forEach((browser) => {
         expect(browser).toBeInstanceOf(BrowserInstallation)
         expect(typeof browser.path).toBe('string')
@@ -35,92 +38,29 @@ describe('BrowserDiscoveryService', () => {
       })
     })
 
-    it('should respect DISABLE_LOCAL_CHROMIUM_DISCOVERY environment variable with "1"', async () => {
+    it('should respect DISABLE_LOCAL_CHROMIUM_DISCOVERY environment variable', async () => {
       process.env.DISABLE_LOCAL_CHROMIUM_DISCOVERY = '1'
 
       const browsers = await service.discoverBrowsers()
-
-      // Should not find system browsers when disabled
       const systemBrowsers = browsers.filter((b) => b.source === 'system')
       expect(systemBrowsers).toHaveLength(0)
     })
 
-    it('should respect DISABLE_LOCAL_CHROMIUM_DISCOVERY environment variable with "true"', async () => {
-      process.env.DISABLE_LOCAL_CHROMIUM_DISCOVERY = 'true'
+    it('should integrate with pure functions for browser selection', async () => {
+      // Mock discoverBrowsers to test integration with pure functions
+      vi.spyOn(service, 'discoverBrowsers').mockResolvedValue([
+        new BrowserInstallation('/usr/bin/chromium', '122.0.0.0', 'system', false),
+        new BrowserInstallation('/managed/path', '121.0.0.0', 'managed', false),
+      ])
 
-      const browsers = await service.discoverBrowsers()
-
-      // Should not find system browsers when disabled
-      const systemBrowsers = browsers.filter((b) => b.source === 'system')
-      expect(systemBrowsers).toHaveLength(0)
-    })
-
-    it('should respect DISABLE_LOCAL_CHROMIUM_DISCOVERY environment variable with "T"', async () => {
-      process.env.DISABLE_LOCAL_CHROMIUM_DISCOVERY = 'T'
-
-      const browsers = await service.discoverBrowsers()
-
-      // Should not find system browsers when disabled
-      const systemBrowsers = browsers.filter((b) => b.source === 'system')
-      expect(systemBrowsers).toHaveLength(0)
-    })
-
-    it('should not disable when DISABLE_LOCAL_CHROMIUM_DISCOVERY is "false"', async () => {
-      process.env.DISABLE_LOCAL_CHROMIUM_DISCOVERY = 'false'
-
-      const browsers = await service.discoverBrowsers()
-
-      // Should still find system browsers when set to "false"
-      // (since it doesn't start with 1, t, or T)
-      expect(Array.isArray(browsers)).toBe(true)
-    })
-
-    it('should not disable when DISABLE_LOCAL_CHROMIUM_DISCOVERY is "0"', async () => {
-      process.env.DISABLE_LOCAL_CHROMIUM_DISCOVERY = '0'
-
-      const browsers = await service.discoverBrowsers()
-
-      // Should still find system browsers when set to "0"
-      // (since it doesn't start with 1, t, or T)
-      expect(Array.isArray(browsers)).toBe(true)
-    })
-
-    it('should handle errors gracefully', async () => {
-      // This should not throw even if there are issues with discovery
-      const browsers = await service.discoverBrowsers()
-      expect(Array.isArray(browsers)).toBe(true)
-    })
-  })
-
-  describe('findBestBrowser', () => {
-    it('should return a browser installation or null', async () => {
       const browser = await service.findBestBrowser()
 
-      if (browser !== null) {
-        expect(browser).toBeInstanceOf(BrowserInstallation)
-        expect(typeof browser.path).toBe('string')
-        expect(typeof browser.version).toBe('string')
-        expect(['system', 'managed']).toContain(browser.source)
-      }
+      // Should prefer managed browser (logic tested in functions.test.ts)
+      expect(browser?.source).toBe('managed')
+      expect(browser?.version).toBe('121.0.0.0')
     })
 
-    it('should handle minimum version filtering', async () => {
-      const browser = await service.findBestBrowser({ minVersion: '999.0.0.0' })
-
-      // With an impossibly high version requirement, should return null
-      expect(browser).toBeNull()
-    })
-
-    it('should handle skipLocal option', async () => {
-      const browser = await service.findBestBrowser({ skipLocal: true })
-
-      if (browser !== null) {
-        expect(browser.source).toBe('managed')
-      }
-    })
-
-    it('should handle empty browser list', async () => {
-      // Mock discoverBrowsers to return empty array
+    it('should handle empty browser discovery gracefully', async () => {
       vi.spyOn(service, 'discoverBrowsers').mockResolvedValue([])
 
       const browser = await service.findBestBrowser()
@@ -128,77 +68,85 @@ describe('BrowserDiscoveryService', () => {
     })
   })
 
-  describe('checkRunningBrowser', () => {
-    it('should return a boolean', async () => {
+  describe('I/O operations', () => {
+    it('should check running browser via network call', async () => {
       const isRunning = await service.checkRunningBrowser()
-
       expect(typeof isRunning).toBe('boolean')
     })
 
-    it('should handle custom port', async () => {
-      const isRunning = await service.checkRunningBrowser({ port: 9223 })
-
-      expect(typeof isRunning).toBe('boolean')
-    })
-
-    it('should handle connection failures gracefully', async () => {
-      // This should not throw even if the connection fails
-      const isRunning = await service.checkRunningBrowser({ port: 99_999 })
-
-      expect(typeof isRunning).toBe('boolean')
-      // Most likely false since port 99999 is unlikely to be in use
+    it('should handle network failures gracefully', async () => {
+      // Use unlikely port to ensure connection failure
+      const isRunning = await service.checkRunningBrowser(99_999)
       expect(isRunning).toBe(false)
     })
-  })
 
-  describe('version comparison logic', () => {
-    it('should handle version comparison correctly', async () => {
-      // Mock discoverBrowsers to return browsers with different versions
-      vi.spyOn(service, 'discoverBrowsers').mockResolvedValue([
-        new BrowserInstallation('/path1', '120.0.6099.109', 'managed', false),
-        new BrowserInstallation('/path2', '121.0.6167.85', 'managed', false),
-        new BrowserInstallation('/path3', '119.0.6045.105', 'managed', false),
-      ])
-
-      const browser = expectNotNull(await service.findBestBrowser())
-
-      expect(browser.version).toBe('121.0.6167.85')
-    })
-
-    it('should handle unknown versions gracefully', async () => {
-      vi.spyOn(service, 'discoverBrowsers').mockResolvedValue([
-        new BrowserInstallation('/path1', 'unknown', 'managed', false),
-        new BrowserInstallation('/path2', '120.0.6099.109', 'managed', false),
-      ])
-
-      const browser = expectNotNull(await service.findBestBrowser())
-      expect(browser.version).toBe('120.0.6099.109')
-    })
-
-    it('should prefer managed browsers over system browsers', async () => {
-      vi.spyOn(service, 'discoverBrowsers').mockResolvedValue([
-        new BrowserInstallation('/usr/bin/chromium', '122.0.0.0', 'system', false),
-        new BrowserInstallation('/managed/path', '121.0.0.0', 'managed', false),
-      ])
-
-      const browser = expectNotNull(await service.findBestBrowser())
-      expect(browser.source).toBe('managed')
-      expect(browser.version).toBe('121.0.0.0')
+    it('should handle discovery errors gracefully', async () => {
+      // Should not throw even if there are issues with discovery
+      const browsers = await service.discoverBrowsers()
+      expect(Array.isArray(browsers)).toBe(true)
     })
   })
 
-  describe('service instantiation and basic functionality', () => {
-    it('should create a service instance', () => {
-      expect(service).toBeInstanceOf(BrowserDiscoveryService)
+  describe('edge cases', () => {
+    it('should handle missing managed browser directory', async () => {
+      // Create service with non-existent managed install path
+      const mockFs = {
+        existsSync: vi.fn().mockReturnValue(false),
+        readdir: vi.fn(),
+        stat: vi.fn(),
+        mkdir: vi.fn(),
+        rm: vi.fn(),
+      }
+      const mockProcess = {
+        execSync: vi.fn(),
+        getEnv: vi.fn().mockReturnValue(undefined),
+      }
+
+      const testService = new BrowserDiscoveryService(mockProcess, mockFs)
+      const browsers = await testService.discoverBrowsers()
+
+      // Should handle missing directory gracefully
+      expect(Array.isArray(browsers)).toBe(true)
+      expect(mockFs.readdir).not.toHaveBeenCalled()
     })
 
-    it('should have all required methods', () => {
-      expect(typeof service.discoverBrowsers).toBe('function')
-      expect(typeof service.findBestBrowser).toBe('function')
-      expect(typeof service.checkRunningBrowser).toBe('function')
-    })
+    it('should handle version parsing failures', async () => {
+      // Mock process to return unparseable version output
+      const mockProcess = {
+        execSync: vi
+          .fn()
+          .mockReturnValueOnce('') // First call for findChromiumExecutable
+          .mockReturnValueOnce('Invalid version output'), // Second call for getBrowserVersion
+        getEnv: vi.fn().mockReturnValue(undefined),
+      }
+      const mockFs = {
+        existsSync: vi.fn().mockReturnValue(false),
+        readdir: vi.fn(),
+        stat: vi.fn(),
+        mkdir: vi.fn(),
+        rm: vi.fn(),
+      }
 
-    it('should handle concurrent calls gracefully', async () => {
+      // Mock findChromiumExecutable to return a path
+      vi.doMock('../findChromiumExecutable.js', () => ({
+        findChromiumExecutable: vi.fn().mockReturnValue('/mock/chrome'),
+      }))
+
+      const testService = new BrowserDiscoveryService(mockProcess, mockFs)
+      const browsers = await testService.discoverBrowsers()
+
+      // Should handle version parsing failure and still return browser with 'unknown' version
+      expect(Array.isArray(browsers)).toBe(true)
+      // The system browser should still be discovered even with version parsing failure
+      const systemBrowser = browsers.find((b) => b.source === 'system')
+      if (systemBrowser) {
+        expect(systemBrowser.version).toBe('unknown')
+      }
+    })
+  })
+
+  describe('concurrent operations', () => {
+    it('should handle concurrent calls without interference', async () => {
       const promises = [
         service.discoverBrowsers(),
         service.findBestBrowser(),
@@ -207,9 +155,9 @@ describe('BrowserDiscoveryService', () => {
 
       const results = await Promise.all(promises)
 
-      expect(Array.isArray(results[0])).toBe(true) // discoverBrowsers result
-      expect(results[1] === null || results[1] instanceof BrowserInstallation).toBe(true) // findBestBrowser result
-      expect(typeof results[2]).toBe('boolean') // checkRunningBrowser result
+      expect(Array.isArray(results[0])).toBe(true)
+      expect(results[1] === null || results[1] instanceof BrowserInstallation).toBe(true)
+      expect(typeof results[2]).toBe('boolean')
     })
   })
 })

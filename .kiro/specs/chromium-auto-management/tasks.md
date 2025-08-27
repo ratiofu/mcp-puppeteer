@@ -40,7 +40,7 @@
   - Write unit tests for version parsing and compatibility checking
   - _Requirements: 3.1, 3.2, 3.3, 3.5_
 
-- [ ] 5.1. Align existing services with functional architecture
+- [x] 5.1. Align existing services with functional architecture
   - Extract those functions that are already pure from `BrowserDiscoveryService` to standalone functions
     - do not convert existing functions to pure functions!
     - the first pure function refactoring may identify a second set of pure functions to extract

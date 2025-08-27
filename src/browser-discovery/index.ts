@@ -6,10 +6,6 @@ export {
   ConcreteFileSystemOperations as DefaultFileSystemOperations,
   ConcreteProcessOperations as DefaultProcessOperations,
 } from '../io/index.js'
-export type {
-  CheckRunningBrowserRequest,
-  FindBestBrowserRequest,
-} from './BrowserDiscoveryService.js'
 export { BrowserDiscoveryService } from './BrowserDiscoveryService.js'
 export type { BrowserExecutableInfo, LaunchOptions } from './BrowserInstallation.js'
 export { BrowserInstallation } from './BrowserInstallation.js'
@@ -26,3 +22,12 @@ export {
 } from './BrowserManagerService.js'
 export { isTruthy } from './envUtils.js'
 export { findChromiumExecutable } from './findChromiumExecutable.js'
+export {
+  compareVersions,
+  filterBrowsersBySource,
+  filterBrowsersByVersion,
+  generateDebugPortCheckCommand,
+  generateExecutablePaths,
+  parseVersionFromOutput,
+  selectBestBrowser,
+} from './functions.js'

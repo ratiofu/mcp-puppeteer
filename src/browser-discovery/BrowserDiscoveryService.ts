@@ -11,21 +11,14 @@ import { errorToString } from '../utils/error.js'
 import { BrowserInstallation } from './BrowserInstallation.js'
 import { isTruthy } from './envUtils.js'
 import { findChromiumExecutable } from './findChromiumExecutable.js'
-
-/**
- * Request options for finding the best browser
- */
-export interface FindBestBrowserRequest {
-  minVersion?: string
-  skipLocal?: boolean // Respects DISABLE_LOCAL_CHROMIUM_DISCOVERY environment variable
-}
-
-/**
- * Request options for checking running browser
- */
-export interface CheckRunningBrowserRequest {
-  port?: number
-}
+import {
+  filterBrowsersBySource,
+  filterBrowsersByVersion,
+  generateDebugPortCheckCommand,
+  generateExecutablePaths,
+  parseVersionFromOutput,
+  selectBestBrowser,
+} from './functions.js'
 
 /**
  * Service for discovering and managing Chromium browser installations
@@ -99,12 +92,14 @@ export class BrowserDiscoveryService {
 
   /**
    * Find the best available browser based on preferences
-   * @param options Options for browser selection
+   * @param minVersion Minimum version requirement (optional)
+   * @param skipLocal Whether to skip local/system browsers (defaults to false)
    * @returns Promise resolving to best BrowserInstallation or null if none found
    */
-  async findBestBrowser(options: FindBestBrowserRequest = {}): Promise<BrowserInstallation | null> {
-    const { minVersion, skipLocal = false } = options
-
+  async findBestBrowser(
+    minVersion?: string,
+    skipLocal = false,
+  ): Promise<BrowserInstallation | null> {
     // Get all available browsers
     const browsers = await this.discoverBrowsers()
 
@@ -112,49 +107,23 @@ export class BrowserDiscoveryService {
       return null
     }
 
-    // Filter by minimum version if specified
-    let filteredBrowsers = browsers
-    if (minVersion) {
-      filteredBrowsers = browsers.filter(
-        (browser) => compareVersions(browser.version, minVersion) >= 0,
-      )
-    }
+    // Apply filters using pure functions
+    let filteredBrowsers = filterBrowsersByVersion(browsers, minVersion)
+    filteredBrowsers = filterBrowsersBySource(filteredBrowsers, skipLocal)
 
-    // Filter out local browsers if skipLocal is true
-    if (skipLocal) {
-      filteredBrowsers = filteredBrowsers.filter((browser) => browser.source !== 'system')
-    }
-
-    if (filteredBrowsers.length === 0) {
-      return null
-    }
-
-    // Prefer managed browsers over system browsers for consistency
-    const managedBrowsers = filteredBrowsers.filter((browser) => browser.source === 'managed')
-    if (managedBrowsers.length > 0) {
-      // Return the highest version managed browser
-      return managedBrowsers.sort((a, b) => compareVersions(b.version, a.version))[0]
-    }
-
-    // Fall back to system browsers, return the highest version
-    return filteredBrowsers.sort((a, b) => compareVersions(b.version, a.version))[0]
+    // Select best browser using pure function
+    return selectBestBrowser(filteredBrowsers)
   }
 
   /**
    * Check if a browser is currently running with debug port
-   * @param request Options for checking running browser
+   * @param port Debug port number (defaults to 9222)
    * @returns Promise resolving to true if browser is running with debug port
    */
-  async checkRunningBrowser(request: CheckRunningBrowserRequest = {}): Promise<boolean> {
-    const { port = 9222 } = request
-
+  async checkRunningBrowser(port = 9222): Promise<boolean> {
     try {
-      // Try to connect to the debug port using curl or similar
-      const command =
-        process.platform === 'win32'
-          ? `powershell -Command "try { Invoke-WebRequest -Uri 'http://localhost:${port}/json/version' -TimeoutSec 2 | Out-Null; exit 0 } catch { exit 1 }"`
-          : `curl -s --connect-timeout 2 http://localhost:${port}/json/version > /dev/null`
-
+      // Generate command using pure function
+      const command = generateDebugPortCheckCommand(port)
       this.process.execSync(command, { stdio: 'pipe' })
       return true
     } catch (_error) {
@@ -188,16 +157,10 @@ export class BrowserDiscoveryService {
   private async getBrowserVersion(executablePath: string): Promise<string> {
     try {
       const command = `"${executablePath}" --version`
-      const output = this.process.execSync(command, { encoding: 'utf8', stdio: 'pipe' }).trim()
+      const output = this.process.execSync(command, { encoding: 'utf8', stdio: 'pipe' })
 
-      // Extract version number from output (e.g., "Chromium 120.0.6099.109" -> "120.0.6099.109")
-      const versionMatch = output.match(/(\d+\.\d+\.\d+\.\d+)/)
-      if (versionMatch) {
-        return versionMatch[1]
-      }
-
-      // Fallback: return the full output if we can't parse it
-      return output
+      // Parse version using pure function
+      return parseVersionFromOutput(output)
     } catch (error) {
       console.warn(`Failed to get browser version for ${executablePath}: ${errorToString(error)}`)
       return 'unknown'
@@ -250,61 +213,16 @@ export class BrowserDiscoveryService {
    * @returns Path to executable or null if not found
    */
   private findExecutableInDirectory(directory: string): string | null {
-    const platform = process.platform
+    // Generate possible paths using pure function
+    const possiblePaths = generateExecutablePaths(directory)
 
-    // Platform-specific executable names
-    const executableNames =
-      platform === 'win32' ? ['chrome.exe', 'chromium.exe'] : ['chrome', 'chromium']
-
-    for (const execName of executableNames) {
-      const execPath = join(directory, execName)
+    // Check each path for existence
+    for (const execPath of possiblePaths) {
       if (this.fs.existsSync(execPath)) {
         return execPath
-      }
-
-      // Also check in common subdirectories
-      const subDirs = ['bin', 'chrome-linux', 'chrome-mac', 'chrome-win']
-      for (const subDir of subDirs) {
-        const subDirPath = join(directory, subDir, execName)
-        if (this.fs.existsSync(subDirPath)) {
-          return subDirPath
-        }
       }
     }
 
     return null
   }
-}
-
-/**
- * Compare two version strings
- * @param version1 First version string
- * @param version2 Second version string
- * @returns Negative if version1 < version2, 0 if equal, positive if version1 > version2
- */
-function compareVersions(version1: string, version2: string): number {
-  // Handle null/undefined versions
-  if (!version1 && !version2) return 0
-  if (!version1) return -1
-  if (!version2) return 1
-
-  // Handle 'unknown' versions
-  if (version1 === 'unknown' && version2 === 'unknown') return 0
-  if (version1 === 'unknown') return -1
-  if (version2 === 'unknown') return 1
-
-  const parts1 = version1.split('.').map(Number)
-  const parts2 = version2.split('.').map(Number)
-
-  const maxLength = Math.max(parts1.length, parts2.length)
-
-  for (let i = 0; i < maxLength; i++) {
-    const part1 = parts1[i] || 0
-    const part2 = parts2[i] || 0
-
-    if (part1 < part2) return -1
-    if (part1 > part2) return 1
-  }
-
-  return 0
 }

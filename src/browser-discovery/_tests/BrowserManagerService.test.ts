@@ -3,6 +3,7 @@ import { chmod, mkdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { compareVersions } from '../../chrome-for-testing/core.js'
 import type { BrowserVersion } from '../../chrome-for-testing/types.js'
 import {
   ConcreteFileSystemOperations,
@@ -14,7 +15,6 @@ import {
   type BrowserInstallationFactory,
   BrowserManagerService,
   type ChromeForTestingApiInterface,
-  compareVersions,
   findExecutableInDirectory,
   findExecutableRecursively,
 } from '../BrowserManagerService.js'
