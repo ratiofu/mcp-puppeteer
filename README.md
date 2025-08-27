@@ -1,8 +1,8 @@
 # Puppeteer MCP Server
 
-A Model Context Protocol (MCP) server that provides browser automation capabilities through Puppeteer. This server enables AI assistants to control Chromium browsers, take screenshots, extract content, and interact with web pages.
+A Model Context Protocol (MCP) server that provides browser automation capabilities through Puppeteer with intelligent browser management. This server enables AI assistants to control Chromium browsers, take screenshots, extract content, and interact with web pages.
 
-✨ **The key difference of this implementation compared to others is that it enables access to the raw DOM content of the page and the console!** ✨
+✨ **The key difference of this implementation compared to others is that it enables access to the raw DOM content of the page and the console!**
 
 ## MCP Client Configuration
 
@@ -39,17 +39,17 @@ Add this to your MCP client configuration:
 
 You need Chromium running with remote debugging enabled:
 
-### macOS
+#### macOS
 ```bash
 open -a "Chromium" --args --remote-debugging-port=9222
 ```
 
-### Linux
+#### Linux
 ```bash
 chromium --remote-debugging-port=9222
 ```
 
-### Windows
+#### Windows
 ```cmd
 chromium --remote-debugging-port=9222
 ```
@@ -64,25 +64,14 @@ The server automatically downloads and runs via `npx` when your MCP client needs
 
 **Error: "Could not connect to Chromium"**
 
-Make sure Chromium is running with the debug port:
-
-```bash
-# macOS
-open -a "Chromium" --args --remote-debugging-port=9222
-
-# Linux  
-chromium --remote-debugging-port=9222
-
-# Windows
-chromium --remote-debugging-port=9222
-```
+Ensure you actually started Chromium (see above).
 
 You can verify Chromium is ready by opening http://localhost:9222/json in your browser.
 
 ### MCP Client Issues
 
 **Server not responding:**
-1. Ensure Chromium is running with debug port (see above)
+1. Ensure Chromium is running with debug port (see Prerequisites section)
 2. Check your MCP client configuration matches the examples
 3. Verify Node.js 22+ is installed (`node --version`)
 
@@ -107,7 +96,11 @@ pnpm start
 
 ```bash
 pnpm run dev            # Auto-rebuild and restart
-pnpm run test           # Run tests
+pnpm run test           # Run unit tests
+pnpm run test:coverage  # Run tests with coverage
+pnpm run quality        # Full quality pipeline (typecheck + lint + test coverage)
+pnpm run lint           # Check code with Biome linter
+pnpm run lint:fix       # Auto-fix linting and formatting issues
 pnpm run inspector      # Test with MCP Inspector
 ```
 
