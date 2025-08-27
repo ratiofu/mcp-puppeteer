@@ -111,6 +111,11 @@ pnpx @modelcontextprotocol/inspector node dist/index.js
 - Run `pnpm run quality` before committing changes
 - Use Biome ignore comments sparingly and with clear justification
 
+## AI Agent Development
+- Follow AI-specific development guidelines in root `AGENTS.md`
+- Use `pnpm vitest run --coverage <target>` for targeted testing during development
+- Run `pnpm run quality` only at task completion
+
 ## Test Coverage Best Practices
 - **Always run tests with coverage**: Use `pnpm run test:coverage` instead of `pnpm test`
 - **Maintain 80% threshold**: Lines, functions, branches, and statements must be ≥80%
