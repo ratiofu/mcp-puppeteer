@@ -40,82 +40,106 @@
   - Write unit tests for version parsing and compatibility checking
   - _Requirements: 3.1, 3.2, 3.3, 3.5_
 
+- [ ] 5.1. Align existing services with functional architecture
+  - Extract pure functions from `BrowserDiscoveryService` class methods
+  - Remove request objects (`FindBestBrowserRequest`, `CheckRunningBrowserRequest`) and use direct parameters
+  - Refactor `BrowserManagerService` to use pure functions for core logic
+  - Export pure functions from module index files for direct use
+  - Update service classes to be thin wrappers around pure functions
+  - Write unit tests for extracted pure functions
+  - _Requirements: Alignment with AGENTS.md functional architecture_
+
+- [ ] 5.2. Extract pure functions from version inspector service
+  - Move pure logic from `VersionInspectorService` to standalone functions
+  - Export `getVersionRequirement`, `checkCompatibility`, `getAvailableVersions` as pure functions
+  - Refactor service class to be thin wrapper around pure functions
+  - Update module exports to include pure functions
+  - Write unit tests for pure version functions
+  - _Requirements: Alignment with AGENTS.md functional architecture_
+
 - [ ] 6. Add new MCP tools for browser management
-  - Add `install_browser` MCP tool that uses Browser Manager Service
+  - Write unit tests for `install_browser` MCP tool functionality first
+  - Add `install_browser` MCP tool that uses pure `installChromium()` function
   - Implement tool input validation with Zod schemas for version parameters
   - Add proper error handling with installation guidance messages
-  - Write integration tests for MCP tool functionality
   - _Requirements: 2.9, 4.4_
 
 - [ ] 7. Add new MCP resources for browser status and version information
-  - Create `browser://status` resource exposing installation and compatibility status
-  - Create `browser://versions` resource listing available versions from Chrome for Testing API
-  - Implement status checking with next steps recommendations (install, upgrade, none)
-  - Add version requirement vs installed version reporting
-  - Write unit tests for resource content generation
+  - Write unit tests for resource content generation functions first
+  - Extract pure functions for status checking and version reporting
+  - Create `browser://status` resource using pure status checking functions
+  - Create `browser://versions` resource using pure `getAvailableVersions()` function
+  - Implement next steps recommendations (install, upgrade, none) as pure logic
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
 - [ ] 8. Integrate auto-discovery with existing MCP server startup
-  - Modify MCP server initialization to attempt browser discovery on startup
-  - Add automatic connection to running Chromium instances with remote debugging
-  - Implement fallback to managed Chromium installation when no running instance found
-  - Add version requirement checking against chromium.version file during startup
-  - Refactor `test-setup.ts` to use `BrowserInstallation` class instead of direct puppeteer.launch calls
-  - Update `launchTestBrowser()` function to create BrowserInstallation instance and use its launch method
-  - Maintain test-specific configurations (SHOW_BROWSER, unique ports, test profiles) while using shared launch logic
-  - Write integration tests for server startup with various browser availability scenarios
+  - Write integration tests for server startup scenarios first
+  - Extract pure functions for browser discovery and connection logic
+  - Modify MCP server initialization to use pure discovery functions
+  - Add automatic connection using pure `checkRunningBrowser()` function
+  - Implement fallback using pure `findBestBrowser()` function
+  - Add version checking using pure `checkCompatibility()` function
+  - Refactor `test-setup.ts` to use extracted pure functions and `BrowserInstallation` class
+  - Update `launchTestBrowser()` to use pure launch logic while maintaining test configurations
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
 - [ ] 9. Create CLI executable with MCP client protocol communication
-  - Create separate CLI entry point that starts and communicates with MCP server
-  - Implement MCP client protocol connection and tool invocation
-  - Add command line argument parsing for `list|l`, `install|i`, `update-expected-version|u`, `help`
-  - Implement interactive mode when no command is provided
-  - Write unit tests for CLI argument parsing and MCP client communication
+  - Write unit tests for CLI argument parsing and command routing first
+  - Extract pure functions for argument parsing and command validation
+  - Create minimal CLI entry point using pure functions
+  - Implement MCP client protocol connection as thin wrapper around pure functions
+  - Add command routing for `list|l`, `install|i`, `update-expected-version|u`, `help`
+  - Implement interactive mode using pure selection logic
   - _Requirements: 2.1, 2.2, 2.7, 2.9_
 
 - [ ] 10. Implement CLI list command with Clack UI
-  - Create `list` command (short form `l`) that queries available versions via MCP
-  - Implement Clack-based interactive UI for version selection
-  - Add version display with current, latest, and compatibility information
-  - Write unit tests for list command functionality
+  - Write unit tests for version listing and selection logic first
+  - Extract pure `listVersions()` function for version querying and formatting
+  - Create minimal `list` command wrapper using pure function
+  - Implement Clack UI as thin presentation layer over pure logic
+  - Add version display using pure formatting functions
   - _Requirements: 2.1_
 
 - [ ] 11. Implement CLI install command with version selection
-  - Create `install` command (short form `i`) with optional version parameter
-  - Add `--force-latest` and `-f` flags for non-interactive latest version installation
-  - Implement version selection UI when no version specified (unless force flags used)
-  - Add installation progress feedback and error handling
-  - Write unit tests for install command with various flag combinations
+  - Write unit tests for installation logic and flag handling first
+  - Extract pure `installBrowser()` function for installation logic
+  - Create minimal `install` command wrapper using pure function
+  - Add `--force-latest` and `-f` flag handling as pure parameter processing
+  - Implement version selection UI as thin layer over pure selection logic
+  - Add progress feedback using pure progress calculation functions
   - _Requirements: 2.2, 2.3_
 
 - [ ] 12. Implement CLI update-expected-version command for project version files
-  - Create `update-expected-version` command (short form `u`) for chromium.version file management
-  - Add repo root detection to ensure command only works in project repositories
-  - Implement `--force-latest` and `-f` flags for automatic latest version updates
-  - Add version selection UI when no version specified (unless force flags used)
-  - Write unit tests for version file updates and repo root detection
+  - Write unit tests for version file operations and repo detection first
+  - Extract pure `updateExpectedVersionFile()` and `isInRepoRoot()` functions
+  - Create minimal `update-expected-version` command using pure functions
+  - Add repo root detection using pure file system checking logic
+  - Implement `--force-latest` flag handling as pure parameter processing
+  - Add version selection UI as thin layer over pure selection logic
   - _Requirements: 2.4, 2.5, 3.4_
 
 - [ ] 13. Add CLI integration with version file management
-  - Implement automatic chromium.version file update prompts when CLI runs from repo root
-  - Add version file creation when missing in project repositories
-  - Ensure CLI has exclusive write access to chromium.version files
-  - Write integration tests for CLI version file management workflows
+  - Write integration tests for version file workflows first
+  - Extract pure functions for version file prompting and creation logic
+  - Implement automatic prompting using pure conditional logic
+  - Add version file creation using pure file operations
+  - Ensure exclusive write access through pure file locking logic
   - _Requirements: 2.8, 3.4_
 
 - [ ] 14. Implement comprehensive error handling and user guidance
-  - Add detailed error messages for browser unavailable scenarios (not found, incompatible, launch failed)
-  - Implement installation guidance with specific remediation steps
-  - Add retry mechanisms for download failures with fallback options
-  - Create user-friendly error responses for all MCP tools and CLI commands
-  - Write unit tests for error handling scenarios
+  - Write unit tests for error scenarios and guidance generation first
+  - Extract pure functions for error message generation and guidance logic
+  - Add detailed error messages using pure formatting functions
+  - Implement installation guidance using pure recommendation logic
+  - Add retry mechanisms using pure retry calculation functions
+  - Create user-friendly responses using pure message formatting
   - _Requirements: 1.3, 3.3_
 
 - [ ] 15. Add cleanup and maintenance features
-  - Implement automatic cleanup of old browser versions during installation
-  - Add maintenance commands for removing unused installations
-  - Implement proper resource cleanup for browser processes and temporary files
-  - Add logging and monitoring for installation and cleanup operations
-  - Write unit tests for cleanup functionality
+  - Write unit tests for cleanup logic and resource management first
+  - Extract pure `cleanupOldVersions()` function for version cleanup logic
+  - Implement automatic cleanup using pure file system operations
+  - Add maintenance commands using pure cleanup functions
+  - Implement resource cleanup using pure process management functions
+  - Add logging using pure log formatting functions
   - _Requirements: 4.3_

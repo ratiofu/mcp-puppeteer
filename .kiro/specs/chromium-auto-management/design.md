@@ -8,6 +8,15 @@ The design leverages the Chrome for Testing API for reliable browser downloads a
 
 ## Architecture
 
+### Architectural Approach
+
+This design follows the "functional core, imperative shell" pattern as specified in AGENTS.md:
+
+- **Functional Core**: Pure functions handle all business logic, data transformations, and calculations
+- **Imperative Shell**: Thin service wrappers handle I/O, side effects, and external integrations
+- **Testability**: Pure functions are easily testable in isolation
+- **Minimal Interfaces**: Simple parameter passing instead of request objects for 1-2 parameters
+
 ### High-Level Components
 
 ```mermaid
@@ -115,27 +124,19 @@ enum BrowserNextStep {
 
 ### 2. Browser Discovery Service
 
-Productizes existing test utilities for browser detection:
+Productizes existing test utilities for browser detection using functional core approach:
 
 ```typescript
+// Pure functions (functional core)
+export const discoverBrowsers = (): Promise<BrowserInstallation[]>;
+export const findBestBrowser = (minVersion?: string, skipLocal?: boolean): Promise<BrowserInstallation | null>;
+export const checkRunningBrowser = (port?: number): Promise<boolean>;
+
+// Service wrapper (imperative shell)
 interface BrowserDiscoveryService {
-  // Discover all available Chromium installations (productizes findChromiumExecutable() from tests)
   discoverBrowsers(): Promise<BrowserInstallation[]>;
-  
-  // Find best available browser based on preferences
-  findBestBrowser(options: FindBestBrowserRequest): Promise<BrowserInstallation | null>;
-  
-  // Check if browser is currently running with debug port
-  checkRunningBrowser(request: CheckRunningBrowserRequest): Promise<boolean>;
-}
-
-interface FindBestBrowserRequest {
-  minVersion?: string;
-  skipLocal?: boolean; // Respects DISABLE_LOCAL_CHROMIUM_DISCOVERY environment variable
-}
-
-interface CheckRunningBrowserRequest {
-  port?: number;
+  findBestBrowser(minVersion?: string, skipLocal?: boolean): Promise<BrowserInstallation | null>;
+  checkRunningBrowser(port?: number): Promise<boolean>;
 }
 
 class BrowserInstallation {
@@ -171,26 +172,19 @@ interface BrowserExecutableInfo {
 
 ### 3. Browser Manager Service
 
-Handles Chromium installation and lifecycle:
+Handles Chromium installation and lifecycle using functional core approach:
 
 ```typescript
+// Pure functions (functional core)
+export const installChromium = (version?: string): Promise<InstallationResult>;
+export const cleanupOldVersions = (): Promise<string[]>;
+export const createInstallation = (path: string): Promise<BrowserInstallation>;
+
+// Service wrapper (imperative shell)
 interface BrowserManagerService {
-  // Download and install Chromium from Chrome for Testing
-  installChromium(request: InstallChromiumManagerRequest): Promise<InstallationResult>;
-  
-  // Clean up old installations
-  cleanupOldVersions(): Promise<CleanupResponse>;
-  
-  // Create BrowserInstallation instance from path
+  installChromium(version?: string): Promise<InstallationResult>;
+  cleanupOldVersions(): Promise<string[]>;
   createInstallation(path: string): Promise<BrowserInstallation>;
-}
-
-interface InstallChromiumManagerRequest {
-  version?: string;
-}
-
-interface CleanupResponse {
-  removedVersions: string[];
 }
 
 interface InstallationResult {
@@ -203,46 +197,29 @@ interface InstallationResult {
 
 ### 4. Version Inspector Service
 
-Manages version requirements and compatibility:
+Manages version requirements and compatibility using functional core approach:
 
 ```typescript
+// Pure functions (functional core)
+export const getVersionRequirement = (projectPath?: string): Promise<string | null>;
+export const checkCompatibility = (installed: string, required?: string): Promise<VersionCompatibility>;
+export const getAvailableVersions = (): Promise<BrowserVersion[]>;
+
+// CLI-only pure functions
+export const updateExpectedVersionFile = (version: string, projectPath: string): Promise<{ success: boolean; path: string }>;
+export const isInRepoRoot = (): Promise<boolean>;
+
+// Service wrapper (imperative shell)
 interface VersionInspectorService {
-  // Read version requirement from chromium.version file (server can read bundled version)
-  getVersionRequirement(request: GetVersionRequirementRequest): Promise<string | null>;
-  
-  // Check version compatibility
-  checkCompatibility(request: CheckCompatibilityRequest): Promise<VersionCompatibility>;
-  
-  // Get available versions from Chrome for Testing API
+  getVersionRequirement(projectPath?: string): Promise<string | null>;
+  checkCompatibility(installed: string, required?: string): Promise<VersionCompatibility>;
   getAvailableVersions(): Promise<BrowserVersion[]>;
 }
 
-interface GetVersionRequirementRequest {
-  projectPath?: string;
-}
-
-interface CheckCompatibilityRequest {
-  installed: string;
-  required?: string;
-}
-
-// CLI-only functionality (not part of MCP server)
+// CLI service wrapper (imperative shell)
 interface CLIVersionManager {
-  // Update chromium.version file (CLI exclusive)
-  updateExpectedVersionFile(request: UpdateExpectedVersionFileRequest): Promise<UpdateExpectedVersionFileResponse>;
-  
-  // Check if running from repo root
+  updateExpectedVersionFile(version: string, projectPath: string): Promise<{ success: boolean; path: string }>;
   isInRepoRoot(): Promise<boolean>;
-}
-
-interface UpdateExpectedVersionFileRequest {
-  version: string;
-  projectPath: string;
-}
-
-interface UpdateExpectedVersionFileResponse {
-  success: boolean;
-  path: string;
 }
 
 interface VersionCompatibility {
@@ -255,53 +232,29 @@ interface VersionCompatibility {
 
 ### 5. CLI Tool
 
-Separate executable that automatically starts and communicates with MCP server via MCP client protocol:
+Separate executable using functional core approach:
 
 ```typescript
+// Pure functions (functional core)
+export const listVersions = (): Promise<{ displayed: boolean; selectedVersion?: string }>;
+export const installBrowser = (version?: string, forceLatest?: boolean): Promise<InstallResult>;
+export const updateExpectedVersion = (version?: string, forceLatest?: boolean, projectPath?: string): Promise<{ success: boolean; version: string; filePath: string; error?: string }>;
+export const showHelp = (): Promise<void>;
+export const runInteractive = (): Promise<void>;
+
+// CLI wrapper (imperative shell)
 interface CLICommands {
-  // List available versions with interactive UI (command: 'list' or 'l')
-  list(): Promise<ListResult>;
-  
-  // Install browser with version selection (command: 'install' or 'i')
-  install(options: InstallOptions): Promise<InstallResult>;
-  
-  // Update version file in current repo (command: 'update-expected-version' or 'u')
-  updateExpectedVersion(options: UpdateExpectedVersionOptions): Promise<UpdateExpectedVersionResult>;
-  
-  // Show CLI help (command: 'help')
+  list(): Promise<{ displayed: boolean; selectedVersion?: string }>;
+  install(version?: string, forceLatest?: boolean): Promise<InstallResult>;
+  updateExpectedVersion(version?: string, forceLatest?: boolean, projectPath?: string): Promise<{ success: boolean; version: string; filePath: string; error?: string }>;
   help(): Promise<void>;
-  
-  // Interactive mode (when no command specified - shows menu for all commands)
   interactive(): Promise<void>;
-}
-
-interface ListResult {
-  displayed: boolean;
-  selectedVersion?: string;
-}
-
-interface InstallOptions {
-  version?: string;
-  forceLatest?: boolean; // --force-latest or -f flags (skips interactive selection)
 }
 
 interface InstallResult {
   success: boolean;
   version: string;
   path?: string;
-  error?: string;
-}
-
-interface UpdateExpectedVersionOptions {
-  version?: string;
-  forceLatest?: boolean; // --force-latest or -f flags (updates to latest without interaction)
-  projectPath?: string; // Only works when run from repo root
-}
-
-interface UpdateExpectedVersionResult {
-  success: boolean;
-  version: string;
-  filePath: string;
   error?: string;
 }
 ```
